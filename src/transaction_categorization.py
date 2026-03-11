@@ -36,7 +36,7 @@ class TextPreprocessor:
         Args:
             custom_stopwords: Additional stopwords to remove
         """
-        # Common stopwords for transaction text
+       
         self.stopwords = {
             'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to',
             'for', 'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are',
