@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Sample Data Loaded{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Sample Data Loaded</h1>
+</div>
+<div class="alert alert-success">
+    <strong>Success!</strong> Sample dataset has been loaded from CSV files.
+</div>
+
+<div class="card">
+    <h3>Sample User Information</h3>
+    <p><strong>User ID:</strong> {{ user_id }}</p>
+    {% if user_profile %}
+    <p><strong>Email:</strong> {{ user_profile.preferences.get('email', 'N/A') if user_profile.preferences else 'N/A' }}</p>
+    <p><strong>Monthly Income:</strong> Rs {{ "%.2f"|format(user_profile.monthly_income) if user_profile.monthly_income else "Not set" }}</p>
+    {% endif %}
+    <p><strong>Transactions Loaded:</strong> {{ transaction_count }}</p>
+</div>
+
+{% if transaction_count >= 2 %}
+<div class="alert alert-success">
+    <strong>Great!</strong> You have {{ transaction_count }} transactions. The ML models have been trained automatically with your data!
+</div>
+{% else %}
+<div class="alert alert-warning">
+    <strong>Note:</strong> You have {{ transaction_count }} transactions. Add at least 2 for training.
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>What's Next?</h3>
+    <ol style="line-height: 2;">
+        <li>Go to your dashboard to see all transactions</li>
+        <li>View personalized insights (if models are trained)</li>
+        <li>Add new transactions to test anomaly detection</li>
+        <li>See how the ML pipeline categorizes and analyzes transactions</li>
+    </ol>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
+    <a href="/dashboard/{{ user_id }}" class="btn">Go to Dashboard</a>
+    {% if transaction_count >= 2 %}
+    <a href="/insights/{{ user_id }}" class="btn btn-secondary">View Insights</a>
+    {% endif %}
+    <a href="/" class="btn btn-secondary">Home</a>
+</div>
+{% endblock %}
+
+{% block app_nav %}
+<nav class="app-nav-top">
+    <a href="/dashboard/{{ user_id }}"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}"><span class="nav-icon">➕</span> Add Transaction</a>
+    <a href="/insights/{{ user_id }}"><span class="nav-icon">💡</span> Insights</a>
+    <a href="/"><span class="nav-icon">🏠</span> Home</a>
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.MiniApp && MiniApp.showToast) MiniApp.showToast('Sample data loaded! {{ transaction_count }} transactions ready.', 'success');
+});
+</script>
+{% endblock %}

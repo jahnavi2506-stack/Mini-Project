@@ -1,0 +1,92 @@
+======================================================================
+FINANCE ML PIPELINE - DEMONSTRATION OUTPUT
+======================================================================
+
+[STEP 1] Initializing ML Pipeline...
+[OK] Pipeline initialized successfully
+
+[STEP 2] Training ML Models on Historical Data...
+  - Training on 16 historical transactions
+  Training Results:
+    [OK] anomaly_detector: success
+    [OK] expense_analyzer: success
+    [X] transaction_categorizer: failed: Need at least 2 categories with 4 samples each.
+
+[STEP 3] Processing New Transactions...
+  - Processing 2 new transactions
+
+  ANOMALY DETECTION RESULTS:
+    Found 1 anomaly alerts
+    Alert #1:
+      Description: Large purchase
+      Amount: Rs 100,000.00
+      Method: z_score
+      Score: 8.1146
+      Reason: Amount 100000.00 is 8.1 standard deviations from mean
+
+  TRANSACTION CATEGORIZATION RESULTS:
+    Categorized 0 transactions
+
+  NOTIFICATIONS:
+    Generated 1 notifications
+    Notification #1: [HIGH] ⚠️ High Expenditure Alert!
+      Unusual transaction detected: Rs 100,000.00 for 'Large purchase'. This is significantly higher than your usual spending pattern. Please verify this transaction.
+      Action: Review this transaction and verify if it's legitimate
+
+[STEP 4] Generating Personalized Insights...
+
+  EXPENSE SUGGESTIONS:
+    Suggestion #1 - SHOPPING:
+      Current Monthly Spend: Rs 26,500.00
+      Suggested Reduction: Rs 5,300.00
+      Potential Savings: Rs 5,300.00
+      Priority: HIGH
+      You spend ₹26500 on shopping monthly. Reduce it to save ₹5300.
+    Suggestion #2 - HOUSING:
+      Current Monthly Spend: Rs 5,000.00
+      Suggested Reduction: Rs 1,000.00
+      Potential Savings: Rs 1,000.00
+      Priority: LOW
+      You spend ₹5000 on housing monthly. Reduce it to save ₹1000.
+    Suggestion #3 - FOOD:
+      Current Monthly Spend: Rs 4,233.33
+      Suggested Reduction: Rs 846.67
+      Potential Savings: Rs 846.67
+      Priority: LOW
+      You spend ₹4233 on food monthly. Reduce it to save ₹847.
+    Suggestion #4 - ENTERTAINMENT:
+      Current Monthly Spend: Rs 1,200.00
+      Suggested Reduction: Rs 240.00
+      Potential Savings: Rs 240.00
+      Priority: LOW
+      You spend ₹1200 on entertainment monthly. Reduce it to save ₹240.
+    Suggestion #5 - TRANSPORT:
+      Current Monthly Spend: Rs 633.33
+      Suggested Reduction: Rs 126.67
+      Potential Savings: Rs 126.67
+      Priority: LOW
+      You spend ₹633 on transport monthly. Reduce it to save ₹127.
+
+  SAVINGS SUGGESTIONS:
+    Current Savings Rate: 47.5%
+    Suggested Savings Rate: 30.0%
+    Suggested Monthly Savings: Rs 15,000.00
+    Projected Yearly Savings: Rs 180,000.00
+    Recommended Range: Rs 5,000.00 - Rs 15,000.00
+    Priority: LOW
+    Great job! You're saving 47.5% of your income. Consider increasing to 30% for even better results.
+
+  FINANCIAL SUMMARY:
+    Monthly Income: Rs 50,000.00
+    Monthly Spending: Rs 26,266.67
+    Current Savings Rate: 47.5%
+
+[STEP 5] Model Statistics:
+    Overall Status: trained
+    Anomaly Detector: fitted
+    Expense Analyzer: fitted
+    Transaction Categorizer: not_fitted
+
+======================================================================
+DEMONSTRATION COMPLETED SUCCESSFULLY!
+======================================================================

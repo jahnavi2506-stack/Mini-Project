@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Registration Successful{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Registration Successful</h1>
+</div>
+<div class="alert alert-success">
+    <strong>Success!</strong> User <strong>{{ user_id }}</strong> has been registered.
+</div>
+
+<div class="card">
+    <h3>Next steps</h3>
+    <ol style="padding-left: 20px;">
+        <li style="margin-bottom: 6px;">Go to your dashboard</li>
+        <li style="margin-bottom: 6px;">Add at least 2 transactions and train the ML models</li>
+        <li style="margin-bottom: 0;">Start getting personalized insights</li>
+    </ol>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
+    <a href="/dashboard/{{ user_id }}" class="btn">Go to Dashboard</a>
+    <a href="/" class="btn btn-secondary">Home</a>
+</div>
+{% endblock %}
+
+{% block app_nav %}
+<nav class="app-nav-top">
+    <a href="/dashboard/{{ user_id }}"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}"><span class="nav-icon">➕</span> Add Transaction</a>
+    <a href="/"><span class="nav-icon">🏠</span> Home</a>
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.MiniApp && MiniApp.showToast) MiniApp.showToast('Registration successful! Welcome, ' + {{ user_id|tojson }} + '.', 'success');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+transaction_id,user_id,amount,description,category,merchant,timestamp
+1,user123,-5000.0,Rent payment,housing,Landlord,2024-11-01 00:00:00
+2,user123,-1500.0,Grocery shopping at BigBasket,food,BigBasket,2024-11-03 00:00:00
+3,user123,-800.0,Uber ride to office,transport,Uber,2024-11-04 00:00:00
+4,user123,-2000.0,Zomato food delivery,food,Zomato,2024-11-06 00:00:00
+5,user123,-5000.0,Rent payment,housing,Landlord,2024-12-01 00:00:00
+6,user123,-1500.0,Grocery shopping,food,BigBasket,2024-12-03 00:00:00
+7,user123,-50000.0,Electronics purchase,shopping,Electronics Store,2024-12-10 00:00:00
+8,user123,-1200.0,Coffee and snacks,food,Cafe,2024-12-29 00:00:00
+9,user123,-300.0,Metro card recharge,transport,Metro,2024-12-28 00:00:00
+10,user123,-2500.0,Restaurant dinner with friends,food,Restaurant,2024-11-08 00:00:00
+11,user123,-1200.0,Netflix subscription,entertainment,Netflix,2024-11-11 00:00:00
+12,user123,-800.0,Uber ride home,transport,Uber,2024-11-13 00:00:00
+13,user123,-3000.0,Shopping at mall,shopping,Mall,2024-11-16 00:00:00
+14,user123,-1500.0,Grocery shopping at BigBasket,food,BigBasket,2024-11-19 00:00:00
+15,user123,-2000.0,Zomato food delivery,food,Zomato,2024-11-21 00:00:00
+16,user123,-500.0,Coffee shop,food,Cafe,2024-11-23 00:00:00
+17,user123,-1000.0,Phone bill,bills,Phone Company,2024-11-05 00:00:00
+18,user123,-2000.0,Electricity bill,bills,Electricity Board,2024-11-15 00:00:00
+19,user123,-1500.0,Internet bill,bills,Internet Provider,2024-11-25 00:00:00
+20,user123,-800.0,Gym membership,other,Gym,2024-11-12 00:00:00

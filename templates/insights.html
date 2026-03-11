@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Personalized Insights - {{ user_id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Personalized Insights</h1>
+    <div class="nav" style="margin-bottom: 0;">
+        <a href="/dashboard/{{ user_id }}">Dashboard</a>
+        <a href="/add_transaction/{{ user_id }}">Add Transaction</a>
+    </div>
+</div>
+
+<div class="grid-2">
+    {% if insights.get('financial_summary') %}
+    <div class="card">
+        <h3>📊 Financial Summary</h3>
+        {% if isinstance(insights['financial_summary'], dict) %}
+            {% if insights['financial_summary'].get('monthly_income') %}
+            <p><strong>Monthly Income:</strong> Rs {{ "%.2f"|format(insights['financial_summary']['monthly_income']) }}</p>
+            {% endif %}
+            <p><strong>Monthly Spending:</strong> Rs {{ "%.2f"|format(insights['financial_summary']['monthly_spending']) }}</p>
+            {% if insights['financial_summary'].get('current_savings_rate') %}
+            <p><strong>Current Savings Rate:</strong> {{ "%.1f"|format(insights['financial_summary']['current_savings_rate'] * 100) }}%</p>
+            {% endif %}
+        {% else %}
+            <p>{{ insights['financial_summary'] }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% if insights.get('savings_suggestion') %}
+    <div class="card">
+        <h3>💵 Savings Suggestions</h3>
+        {% if isinstance(insights['savings_suggestion'], dict) %}
+            <p><strong>Current Savings Rate:</strong> {{ "%.1f"|format(insights['savings_suggestion']['current_savings_rate'] * 100) }}%</p>
+            <p><strong>Suggested Rate:</strong> {{ "%.1f"|format(insights['savings_suggestion']['savings_percentage'] * 100) }}%</p>
+            <p><strong>Suggested Monthly Savings:</strong> Rs {{ "%.2f"|format(insights['savings_suggestion']['suggested_monthly_savings']) }}</p>
+            <p><strong>Projected Yearly:</strong> Rs {{ "%.2f"|format(insights['savings_suggestion']['projected_yearly_savings']) }}</p>
+            <p><strong>Range:</strong> Rs {{ "%.2f"|format(insights['savings_suggestion']['recommended_range']['min']) }} – Rs {{ "%.2f"|format(insights['savings_suggestion']['recommended_range']['max']) }}</p>
+            <p><strong>Priority:</strong> <span class="badge badge-{{ 'danger' if insights['savings_suggestion']['priority'] == 'high' else 'warning' if insights['savings_suggestion']['priority'] == 'medium' else 'info' }}">{{ insights['savings_suggestion']['priority'].upper() }}</span></p>
+            <p>{{ insights['savings_suggestion']['reason'] }}</p>
+        {% else %}
+            <p>{{ insights['savings_suggestion'] }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% if insights.get('expense_suggestions') %}
+<div class="card" style="margin-top: 8px;">
+    <h3>💰 Expense Suggestions</h3>
+    {% if isinstance(insights['expense_suggestions'], list) %}
+    <div class="grid-2" style="margin-top: 12px;">
+        {% for suggestion in insights['expense_suggestions'] %}
+        <div class="card" style="margin-bottom: 0;">
+            <h3 style="font-size: 0.9375rem;">{{ suggestion['category'].upper() }}</h3>
+            <p><strong>Current Monthly Spend:</strong> Rs {{ "%.2f"|format(suggestion['current_monthly_spend']) }}</p>
+            <p><strong>Potential Savings:</strong> Rs {{ "%.2f"|format(suggestion['potential_savings']) }}</p>
+            <p><strong>Priority:</strong> <span class="badge badge-{{ 'danger' if suggestion['priority'] == 'high' else 'warning' if suggestion['priority'] == 'medium' else 'info' }}">{{ suggestion['priority'].upper() }}</span></p>
+            <p>{{ suggestion['reason'] }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>{{ insights['expense_suggestions'] }}</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<div style="display: flex; gap: 12px; margin-top: 24px;">
+    <a href="/dashboard/{{ user_id }}" class="btn">Back to Dashboard</a>
+</div>
+{% endblock %}
+
+{% block app_nav %}
+<nav class="app-nav-top">
+    <a href="/dashboard/{{ user_id }}"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}"><span class="nav-icon">➕</span> Add Transaction</a>
+    <a href="/insights/{{ user_id }}" class="active"><span class="nav-icon">💡</span> Insights</a>
+    <a href="/"><span class="nav-icon">🏠</span> Home</a>
+</nav>
+{% endblock %}

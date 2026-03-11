@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction Result{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Transaction Added</h1>
+    <div class="nav" style="margin-bottom: 0;">
+    <a href="/dashboard/{{ user_id }}">Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}">Add Another</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Transaction Details</h3>
+    <p><strong>Description:</strong> {{ transaction.description }}</p>
+    <p><strong>Amount:</strong> Rs {{ "%.2f"|format(abs(transaction.amount)) }}</p>
+    <p><strong>Category:</strong> {{ transaction.category or 'Will be categorized automatically' }}</p>
+    <p><strong>Merchant:</strong> {{ transaction.merchant or '-' }}</p>
+    <p><strong>Date:</strong> {{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+</div>
+
+{% if results %}
+    {% if results.get('anomaly_alerts') %}
+    <div class="card">
+        <h3>⚠️ Anomaly Alerts</h3>
+        {% for alert in results['anomaly_alerts'] %}
+        <div class="alert alert-error">
+            <strong>Alert!</strong> {{ alert['reason'] }}<br>
+            <small>Method: {{ alert['method'] }} | Score: {{ "%.4f"|format(alert['score']) }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if results.get('categorized_transactions') %}
+    <div class="card">
+        <h3>📂 Auto-Categorization</h3>
+        {% for cat in results['categorized_transactions'] %}
+        <div class="alert alert-info">
+            <strong>Predicted Category:</strong> {{ cat['predicted_category'] }}<br>
+            <strong>Confidence:</strong> {{ "%.1f"|format(cat['confidence'] * 100) }}%
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if results.get('notifications') %}
+    <div class="card">
+        <h3>🔔 Notifications</h3>
+        {% for notif in results['notifications'] %}
+        <div class="alert alert-{{ 'error' if notif['priority'] == 'high' else 'warning' if notif['priority'] == 'medium' else 'info' }}">
+            <strong>{{ notif['title'] }}</strong><br>
+            {{ notif['message'] }}
+            {% if notif.get('action_suggestion') %}
+            <br><small><strong>Action:</strong> {{ notif['action_suggestion'] }}</small>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if results.get('anomaly_alerts') and not results.get('notifications') %}
+    <div class="card">
+        <h3>⚠️ High Expenditure Alert</h3>
+        {% for alert in results['anomaly_alerts'] %}
+        <div class="alert alert-error">
+            <strong>⚠️ Unusual Spending Detected!</strong><br>
+            Transaction of Rs {{ "%.2f"|format(abs(alert['amount'])) }} for "{{ alert['description'] }}" 
+            is significantly higher than your usual spending pattern.<br>
+            <small><strong>Reason:</strong> {{ alert['reason'] }}</small><br>
+            <small><strong>Action:</strong> Please review and verify this transaction</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% else %}
+<div class="alert alert-info">
+    <strong>Note:</strong> Train the models first to see ML-powered insights for new transactions.
+</div>
+{% endif %}
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
+    <a href="/dashboard/{{ user_id }}" class="btn">Go to Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}" class="btn btn-secondary">Add Another Transaction</a>
+</div>
+{% endblock %}
+
+{% block app_nav %}
+<nav class="app-nav-top">
+    <a href="/dashboard/{{ user_id }}"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}" class="active"><span class="nav-icon">➕</span> Add Transaction</a>
+    <a href="/"><span class="nav-icon">🏠</span> Home</a>
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.MiniApp && MiniApp.showToast) MiniApp.showToast('Transaction added successfully!', 'success');
+});
+</script>
+{% endblock %}

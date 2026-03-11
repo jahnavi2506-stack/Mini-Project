@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Finance ML Pipeline{% endblock %}
+
+{% block content %}
+<div class="page-header" style="border-bottom: none; padding-bottom: 0;">
+    <h1 class="mb-2">Finance ML Pipeline</h1>
+    <p class="text-muted">Personal finance with ML — alerts, insights & smart notifications</p>
+</div>
+
+<div class="flex-wrap mb-3">
+    <a href="/load_sample_data" class="btn btn-success">🚀 Try Sample Dataset</a>
+    <a href="/register" class="btn">Get Started — Register</a>
+    <button type="button" class="btn btn-secondary" id="btn-how-it-works">How it works</button>
+</div>
+
+<div class="grid-3">
+    <div class="card">
+        <h3>🔔 Smart Alerts</h3>
+        <p>Anomaly detection and spending alerts so you stay on top of unusual transactions.</p>
+    </div>
+    <div class="card">
+        <h3>📊 Expense Insights</h3>
+        <p>Personalized expense suggestions and categorization powered by ML.</p>
+    </div>
+    <div class="card">
+        <h3>💵 Savings</h3>
+        <p>Savings suggestions and recurring payment reminders.</p>
+    </div>
+</div>
+
+<div class="grid-2 mt-3">
+    <div class="card">
+        <h3>Quick start</h3>
+        <ol style="padding-left: var(--space-4); margin-bottom: 0;">
+            <li class="mb-2">Register with user ID, email, and monthly income</li>
+            <li class="mb-2">Add at least 2 transactions and train the ML models</li>
+            <li class="mb-2">Use the top nav: Dashboard, Add Transaction, Insights</li>
+            <li class="mb-0">Check notifications and popups for alerts and tips</li>
+        </ol>
+    </div>
+    <div class="card">
+        <h3>Features at a glance</h3>
+        <ul style="padding-left: var(--space-4); margin-bottom: 0;">
+            <li class="mb-2">Smart spending alerts (anomaly detection)</li>
+            <li class="mb-2">Automatic transaction categorization</li>
+            <li class="mb-2">Savings and expense suggestions</li>
+            <li class="mb-0">Notifications & popups</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('btn-how-it-works');
+    if (btn && window.MiniApp && MiniApp.showModal) {
+        btn.addEventListener('click', function() {
+            MiniApp.showModal({
+                title: 'How it works',
+                body: '<p><strong>1. Register</strong> — Create your profile with monthly income.</p><p><strong>2. Add transactions</strong> — Enter expenses (amount, description, category, merchant).</p><p><strong>3. Train</strong> — With 2+ transactions, train ML models from the dashboard.</p><p><strong>4. Insights & notifications</strong> — Get spending alerts, savings suggestions, and recurring payment reminders.</p>',
+                confirmText: 'Got it',
+                cancelText: null,
+                onConfirm: function() {}
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

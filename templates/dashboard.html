@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ user_id }}{% endblock %}
+
+{% block container_class %}container-wide{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard — {{ user_id }}</h1>
+    <div class="nav mb-0">
+        <a href="/">Home</a>
+        <a href="/add_transaction/{{ user_id }}">Add Transaction</a>
+        <button type="button" class="btn" id="btn-quick-add">＋ Quick Add</button>
+        {% if is_trained %}
+        <a href="/insights/{{ user_id }}">View Insights</a>
+        {% endif %}
+        {% if is_trained %}
+        <button type="button" class="btn btn-secondary" id="btn-notifications-popup" title="View all notifications">🔔 Notifications{% if notifications %} ({{ notifications|length }}){% endif %}</button>
+        {% endif %}
+        <a href="#" id="link-reload-sample" class="btn btn-success">🔄 Reload Sample Data</a>
+    </div>
+</div>
+
+<div class="stats-row">
+    <div class="card">
+        <span class="text-muted">Transactions</span>
+        <div class="text-primary-lg" id="transaction-count">{{ transaction_count }}</div>
+    </div>
+    <div class="card">
+        <span class="text-muted">Status</span>
+        <div>
+            {% if is_trained %}
+            <span class="badge badge-success">Models Trained</span>
+            {% elif transaction_count >= 2 %}
+            <span class="badge badge-warning">Ready to Train</span>
+            {% else %}
+            <span class="badge badge-info">Add {{ 2 - transaction_count }} more to train</span>
+            {% endif %}
+        </div>
+    </div>
+    {% if transaction_count >= 2 and not is_trained %}
+    <div class="card flex-wrap mb-0" style="flex: 0 0 auto;">
+        <a href="/train/{{ user_id }}" class="btn">Train ML Models</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-bottom: var(--space-3);">
+    <div class="action-row">
+        <h2 class="mb-0">Financial Insights</h2>
+        <span class="text-muted">Auto-updates from your transactions</span>
+    </div>
+    <div class="grid-2">
+        <div class="card mb-0">
+            <h3>Monthly Spending</h3>
+            <div style="height: 280px;">
+                <canvas id="chart-monthly-spending"></canvas>
+            </div>
+        </div>
+        <div class="card mb-0">
+            <h3>Expense Distribution</h3>
+            <div style="height: 280px;">
+                <canvas id="chart-expense-pie"></canvas>
+            </div>
+        </div>
+        <div class="card mb-0">
+            <h3>Income vs Expense Trend</h3>
+            <div style="height: 280px;">
+                <canvas id="chart-income-expense"></canvas>
+            </div>
+        </div>
+        <div class="card mb-0">
+            <h3>Weekly Spending Activity</h3>
+            <div style="height: 280px;">
+                <canvas id="chart-weekly-spending"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-1-2" style="align-items: start;">
+    <div>
+        {% if user_profile %}
+        <div class="card">
+            <h3>User Profile</h3>
+            <p><strong>User ID:</strong> {{ user_profile.user_id }}</p>
+            <p><strong>Monthly Income:</strong> Rs {{ "%.2f"|format(user_profile.monthly_income) if user_profile.monthly_income else "Not set" }}</p>
+        </div>
+        {% endif %}
+
+        <div class="card" id="budget-summary-card">
+            <div class="action-row">
+                <h3 class="mb-0">Budget Summary (This Month)</h3>
+                <div class="flex-wrap">
+                    <span class="text-muted">Category budgets</span>
+                    <button type="button" class="btn btn-secondary" id="btn-manage-budgets">Manage Budgets</button>
+                </div>
+            </div>
+            <div id="budget-summary-content">
+            {% if budget_summary %}
+            <table id="budget-summary-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Spent</th>
+                        <th>Limit</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="budget-summary-body">
+                    {% for b in budget_summary %}
+                    <tr>
+                        <td>{{ b['category'].title() }}</td>
+                        <td>₹ {{ "%.0f"|format(b['spent']) }}</td>
+                        <td>₹ {{ "%.0f"|format(b['limit']) }}</td>
+                        <td>
+                            {% if b['exceeded'] %}
+                                <span class="badge badge-danger">Exceeded</span>
+                            {% else %}
+                                <span class="badge badge-success">On track</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info mb-0" id="budget-summary-empty">
+                No budgets set yet. Add simple category limits to get budget warnings and improve your Finance Health Score.
+            </div>
+            {% endif %}
+            </div>
+        </div>
+
+        {% if finance_score %}
+        <div class="card">
+            <div class="action-row">
+                <h3 class="mb-0">Finance Health Score</h3>
+                <span class="badge badge-info">{{ finance_score['score'] }} / 100</span>
+            </div>
+            {% if finance_score.get('insights') %}
+            <ul style="padding-left: var(--space-4); margin-bottom: 0;">
+                {% for i in finance_score['insights'] %}
+                <li class="mb-2">{{ i }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if notifications %}
+        <div class="card">
+            <h3>🔔 Notifications & Alerts</h3>
+            {% for notif in notifications[:3] %}
+            <div class="alert alert-{{ 'error' if notif['type'] == 'critical' else 'warning' if notif['type'] == 'warning' else 'info' }} mb-2">
+                {{ notif['message'] }}
+                {% if notif.get('timestamp') %}
+                <br><small class="text-muted">{{ notif['timestamp'] }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if upcoming_predictions %}
+        <div class="card">
+            <h3>📅 Next Month Predictions</h3>
+            <p class="text-muted mb-2">Recurring spending patterns</p>
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>Category</th><th>Amount</th><th>Days</th></tr>
+                </thead>
+                <tbody>
+                    {% for pred in upcoming_predictions %}
+                    <tr>
+                        <td>{{ pred['next_expected'] }}</td>
+                        <td>{{ pred['category'] }}</td>
+                        <td>Rs {{ "%.2f"|format(pred['amount']) }}</td>
+                        <td>
+                            {% if pred['days_until'] == 0 %}<span class="badge badge-danger">Today</span>
+                            {% elif pred['days_until'] <= 7 %}<span class="badge badge-warning">{{ pred['days_until'] }}d</span>
+                            {% else %}<span class="badge badge-info">{{ pred['days_until'] }}d</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% if is_trained and insights %}
+        <div class="card">
+            <h3>Quick Insights</h3>
+            {% if insights.get('savings_suggestion') %}
+            <p><strong>Savings Rate:</strong> {{ "%.1f"|format(insights['savings_suggestion']['current_savings_rate'] * 100) }}%</p>
+            <p><strong>Suggested Monthly Savings:</strong> Rs {{ "%.2f"|format(insights['savings_suggestion']['suggested_monthly_savings']) }}</p>
+            {% endif %}
+            <a href="/insights/{{ user_id }}" class="btn mt-3">View Full Insights</a>
+        </div>
+        {% endif %}
+    </div>
+    <div>
+        <div class="action-row">
+            <h2 class="mb-0">Recent Transactions</h2>
+            <a href="/add_transaction/{{ user_id }}" class="btn">Add Transaction</a>
+        </div>
+        {% if transactions %}
+        <div class="card mb-0" style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        <th>Merchant</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-transactions-body">
+                    {% for t in transactions[-10:] %}
+                    <tr>
+                        <td>{{ t.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ t.description }}</td>
+                        <td>Rs {{ "%.2f"|format(abs(t.amount)) }}</td>
+                        <td>{{ t.category or '—' }}</td>
+                        <td>{{ t.merchant or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            No transactions yet. <a href="/add_transaction/{{ user_id }}" class="btn mt-3">Add your first transaction</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if transaction_count < 2 %}
+<div class="alert alert-info mt-3">
+    <strong>Add more data:</strong> Add at least 2 transactions to train ML models for insights.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block app_nav %}
+<nav class="app-nav-top">
+    <a href="/dashboard/{{ user_id }}" class="active"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}"><span class="nav-icon">➕</span> Add Transaction</a>
+    <a href="/insights/{{ user_id }}"><span class="nav-icon">💡</span> Insights</a>
+    <a href="/"><span class="nav-icon">🏠</span> Home</a>
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/financial-charts.js') }}"></script>
+<script>
+(function() {
+    var notifications = {{ (notifications or [])|tojson }};
+    var budgets = {{ (budgets or {})|tojson }};
+    var categorySpending = {{ (category_spending or {})|tojson }};
+    var btnNotif = document.getElementById('btn-notifications-popup');
+    if (btnNotif && typeof MiniApp !== 'undefined' && MiniApp.showNotificationsPopup) {
+        btnNotif.addEventListener('click', function() {
+            MiniApp.showNotificationsPopup(notifications);
+        });
+    }
+    document.getElementById('link-reload-sample').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (typeof MiniApp !== 'undefined' && MiniApp.confirmPopup) {
+            MiniApp.confirmPopup({
+                title: 'Reload Sample Data?',
+                message: 'This will replace current data with the sample dataset. Continue?',
+                confirmText: 'Yes, Reload',
+                cancelText: 'Cancel',
+                onConfirm: function() { window.location.href = '/load_sample_data'; }
+            });
+        } else {
+            if (confirm('Reload sample data? This will replace current data.')) window.location.href = '/load_sample_data';
+        }
+    });
+
+    if (window.IntelliBankFinancialInsights) {
+        window.IntelliBankFinancialInsights.init({{ user_id|tojson }});
+    }
+
+    // Lightweight budget editor (CSV-backed)
+    var btnBudgets = document.getElementById('btn-manage-budgets');
+    if (btnBudgets && window.MiniApp && MiniApp.showModal) {
+        btnBudgets.addEventListener('click', function() {
+            var rows = [];
+            Object.keys(budgets || {}).sort().forEach(function(cat) {
+                rows.push({ category: cat, limit: budgets[cat] });
+            });
+            if (!rows.length) {
+                rows = [
+                    { category: 'food', limit: 8000 },
+                    { category: 'transport', limit: 3000 },
+                    { category: 'shopping', limit: 5000 }
+                ];
+            }
+
+            function rowHtml(i, r) {
+                return (
+                    '<div class=\"grid-2 gap-2\" style=\"margin-bottom: var(--space-2);\">' +
+                        '<div class=\"form-group\" style=\"margin-bottom: 0;\">' +
+                            '<label>Category</label>' +
+                            '<input type=\"text\" name=\"cat_' + i + '\" value=\"' + String(r.category || '') + '\" placeholder=\"food\" />' +
+                        '</div>' +
+                        '<div class=\"form-group\" style=\"margin-bottom: 0;\">' +
+                            '<label>Monthly Limit (₹)</label>' +
+                            '<input type=\"number\" name=\"limit_' + i + '\" value=\"' + String(r.limit || '') + '\" min=\"0\" step=\"1\" placeholder=\"8000\" />' +
+                        '</div>' +
+                    '</div>'
+                );
+            }
+
+            var html = '<div class=\"text-muted\" style=\"margin-bottom: var(--space-2);\">Set category-wise monthly budgets. Saved to <code>data/budgets.csv</code>.</div>' +
+                       '<form id=\"budgets-form\">';
+            rows.forEach(function(r, i) { html += rowHtml(i, r); });
+            html += '<div class=\"grid-2 gap-2\" style=\"margin-bottom: var(--space-2);\">' +
+                        '<div class=\"form-group\" style=\"margin-bottom: 0;\">' +
+                            '<label>New Category</label>' +
+                            '<input type=\"text\" name=\"new_cat\" placeholder=\"bills\" />' +
+                        '</div>' +
+                        '<div class=\"form-group\" style=\"margin-bottom: 0;\">' +
+                            '<label>New Limit (₹)</label>' +
+                            '<input type=\"number\" name=\"new_limit\" min=\"0\" step=\"1\" placeholder=\"6000\" />' +
+                        '</div>' +
+                    '</div>' +
+                    '</form>';
+
+            MiniApp.showModal({
+                title: 'Manage Budgets',
+                body: html,
+                confirmText: 'Save Changes',
+                cancelText: 'Cancel',
+                onConfirm: async function() {
+                    try {
+                        var form = document.getElementById('budgets-form');
+                        if (!form) return;
+                        var fd = new FormData(form);
+                        var next = {};
+                        rows.forEach(function(r, i) {
+                            var c = (fd.get('cat_' + i) || '').toString().trim().toLowerCase();
+                            var l = Number(fd.get('limit_' + i) || 0);
+                            if (c && l > 0) next[c] = l;
+                        });
+                        var nc = (fd.get('new_cat') || '').toString().trim().toLowerCase();
+                        var nl = Number(fd.get('new_limit') || 0);
+                        if (nc && nl > 0) next[nc] = nl;
+
+                        var res = await fetch('/update-budgets', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: {{ user_id|tojson }}, budgets: next })
+                        });
+                        var json = await res.json();
+                        if (!json || json.ok !== true) throw new Error((json && json.error) || 'Failed to save budgets');
+                        budgets = json.budgets || next;
+
+                        // Update Budget Summary card instantly (DOM update, no refresh)
+                        var content = document.getElementById('budget-summary-content');
+                        if (content) {
+                            var cats = Object.keys(budgets || {}).sort();
+                            if (!cats.length) {
+                                content.innerHTML = '<div class=\"alert alert-info mb-0\" id=\"budget-summary-empty\">No budgets set yet. Add simple category limits to get budget warnings and improve your Finance Health Score.</div>';
+                            } else {
+                                var tbodyHtml = '';
+                                cats.forEach(function(cat) {
+                                    var spent = Number((categorySpending && categorySpending[cat]) || 0);
+                                    var limit = Number(budgets[cat] || 0);
+                                    var exceeded = spent > limit;
+                                    tbodyHtml += '<tr>' +
+                                        '<td>' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</td>' +
+                                        '<td>₹ ' + Math.round(spent) + '</td>' +
+                                        '<td>₹ ' + Math.round(limit) + '</td>' +
+                                        '<td>' + (exceeded ? '<span class=\"badge badge-danger\">Exceeded</span>' : '<span class=\"badge badge-success\">On track</span>') + '</td>' +
+                                    '</tr>';
+                                });
+                                content.innerHTML =
+                                    '<table id=\"budget-summary-table\">' +
+                                        '<thead><tr><th>Category</th><th>Spent</th><th>Limit</th><th>Status</th></tr></thead>' +
+                                        '<tbody id=\"budget-summary-body\">' + tbodyHtml + '</tbody>' +
+                                    '</table>';
+                            }
+                        }
+
+                        if (window.MiniApp && MiniApp.showToast) MiniApp.showToast('Budgets saved and dashboard updated.', 'success');
+                    } catch (e) {
+                        if (window.MiniApp && MiniApp.showToast) MiniApp.showToast(String(e.message || e), 'error');
+                    }
+                }
+            });
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Training Successful{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Models Trained</h1>
+</div>
+<div class="alert alert-success">
+    <strong>Success!</strong> All ML models have been trained on your transaction data.
+</div>
+
+<div class="card">
+    <h3>Training Status</h3>
+    {% if training_status.get('total_transactions') %}
+    <p><strong>Total Transactions Used:</strong> {{ training_status['total_transactions'] }}</p>
+    {% endif %}
+    <ul style="line-height: 2;">
+        {% for component, status in training_status.items() %}
+        {% if component not in ['total_transactions', 'trained_components'] %}
+        <li>
+            <strong>{{ component.replace('_', ' ').title() }}:</strong> 
+            {% if isinstance(status, str) and 'success' in status %}
+                <span class="badge badge-success">Success</span>
+            {% else %}
+                <span class="badge badge-warning">{{ status }}</span>
+            {% endif %}
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    {% if training_status.get('trained_components') %}
+    <p><strong>Trained Components:</strong> {{ training_status['trained_components']|length }} out of 3</p>
+    {% endif %}
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
+    <a href="/dashboard/{{ user_id }}" class="btn">Go to Dashboard</a>
+    <a href="/insights/{{ user_id }}" class="btn btn-secondary">View Insights</a>
+</div>
+{% endblock %}
+
+{% block app_nav %}
+<nav class="app-nav-top">
+    <a href="/dashboard/{{ user_id }}"><span class="nav-icon">📊</span> Dashboard</a>
+    <a href="/add_transaction/{{ user_id }}"><span class="nav-icon">➕</span> Add Transaction</a>
+    <a href="/insights/{{ user_id }}" class="active"><span class="nav-icon">💡</span> Insights</a>
+    <a href="/"><span class="nav-icon">🏠</span> Home</a>
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.MiniApp && MiniApp.showToast) MiniApp.showToast('ML models trained successfully!', 'success');
+});
+</script>
+{% endblock %}

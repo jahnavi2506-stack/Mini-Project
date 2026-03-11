@@ -1,0 +1,4 @@
+user_id,email,monthly_income,savings_goal
+user123,john.doe@example.com,50000.0,100000.0
+user456,jane.smith@example.com,75000.0,150000.0
+user789,bob.wilson@example.com,40000.0,80000.0
