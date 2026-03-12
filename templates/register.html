@@ -18,6 +18,9 @@
         <div class="form-group">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" required placeholder="your.email@example.com" value="{{ prefill_email or request.form.get('email', '') }}">
+            <p class="text-muted" style="font-size: 0.85rem; margin-top: 4px;">
+                On successful registration, a confirmation message will be sent to this email (if email is configured).
+            </p>
         </div>
     </div>
     <div class="grid-2">

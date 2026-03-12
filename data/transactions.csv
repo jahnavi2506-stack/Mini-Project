@@ -214,3 +214,53 @@ transaction_id,user_id,amount,description,category,merchant,timestamp
 213,Sankeerthana,-2000.0,Online shopping,shopping,Flipkart,2025-02-26 00:00:00
 214,Sankeerthana,-800.0,Cab to airport,transport,Uber,2025-02-27 00:00:00
 215,Sankeerthana,50000.0,Monthly salary,other,Company,2025-03-01 00:00:00
+216,jahnavi,50000.0,Monthly salary,other,Company,2024-10-01 00:00:00
+217,jahnavi,-15000.0,Rent payment,other,Landlord,2024-10-01 00:00:00
+218,jahnavi,-3200.0,Grocery shopping,food,BigBasket,2024-10-05 00:00:00
+219,jahnavi,-800.0,Uber to office,transport,Uber,2024-10-08 00:00:00
+220,jahnavi,50000.0,Monthly salary,other,Company,2024-11-01 00:00:00
+221,jahnavi,-15000.0,Rent payment,other,Landlord,2024-11-01 00:00:00
+222,jahnavi,-1800.0,Grocery at BigBasket,food,BigBasket,2024-11-03 00:00:00
+223,jahnavi,-2200.0,Zomato food delivery,food,Zomato,2024-11-06 00:00:00
+224,jahnavi,-600.0,Metro recharge,transport,Metro,2024-11-04 00:00:00
+225,jahnavi,-1200.0,Phone bill,bills,Operator,2024-11-05 00:00:00
+226,jahnavi,-2500.0,Restaurant dinner,food,Restaurant,2024-11-08 00:00:00
+227,jahnavi,-3500.0,Shopping at mall,shopping,Mall,2024-11-10 00:00:00
+228,jahnavi,-900.0,Uber ride,transport,Uber,2024-11-12 00:00:00
+229,jahnavi,-2000.0,Electricity bill,bills,Board,2024-11-15 00:00:00
+230,jahnavi,-1500.0,Internet bill,bills,Provider,2024-11-18 00:00:00
+231,jahnavi,50000.0,Monthly salary,other,Company,2024-12-01 00:00:00
+232,jahnavi,-15000.0,Rent payment,other,Landlord,2024-12-01 00:00:00
+233,jahnavi,-50000.0,Electronics purchase,shopping,Electronics Store,2024-12-10 00:00:00
+234,jahnavi,-2000.0,Grocery,food,BigBasket,2024-12-03 00:00:00
+235,jahnavi,-1800.0,Zomato delivery,food,Zomato,2024-12-07 00:00:00
+236,jahnavi,-1200.0,Netflix subscription,other,Netflix,2024-12-05 00:00:00
+237,jahnavi,-800.0,Uber,transport,Uber,2024-12-09 00:00:00
+238,jahnavi,-3000.0,Shopping,shopping,Amazon,2024-12-14 00:00:00
+239,jahnavi,-1100.0,Phone bill,bills,Operator,2024-12-16 00:00:00
+240,jahnavi,50000.0,Monthly salary,other,Company,2025-01-01 00:00:00
+241,jahnavi,-15000.0,Rent payment,other,Landlord,2025-01-01 00:00:00
+242,jahnavi,-2800.0,Grocery,food,BigBasket,2025-01-04 00:00:00
+243,jahnavi,-1500.0,Restaurant,food,Restaurant,2025-01-08 00:00:00
+244,jahnavi,-700.0,Metro and cab,transport,Metro,2025-01-06 00:00:00
+245,jahnavi,-2500.0,Online shopping,shopping,Flipkart,2025-01-12 00:00:00
+246,jahnavi,-2000.0,Electricity bill,bills,Board,2025-01-15 00:00:00
+247,jahnavi,50000.0,Monthly salary,other,Company,2025-02-01 00:00:00
+248,jahnavi,-15000.0,Rent payment,other,Landlord,2025-02-01 00:00:00
+249,jahnavi,-3000.0,Grocery,food,BigBasket,2025-02-05 00:00:00
+250,jahnavi,-2400.0,Zomato and cafe,food,Zomato,2025-02-10 00:00:00
+251,jahnavi,-900.0,Uber,transport,Uber,2025-02-14 00:00:00
+252,jahnavi,-1800.0,Bills,bills,Provider,2025-02-18 00:00:00
+253,jahnavi,-2200.0,Shopping,shopping,Mall,2025-02-22 00:00:00
+254,jahnavi,-1500.0,Restaurant,food,Restaurant,2025-02-28 00:00:00
+255,jahnavi,-1200.0,Phone bill,bills,Operator,2025-02-02 00:00:00
+256,jahnavi,-1800.0,Grocery,food,BigBasket,2025-02-04 00:00:00
+257,jahnavi,-600.0,Metro recharge,transport,Metro,2025-02-07 00:00:00
+258,jahnavi,-2500.0,Electricity bill,bills,Board,2025-02-12 00:00:00
+259,jahnavi,-900.0,Uber ride,transport,Uber,2025-02-15 00:00:00
+260,jahnavi,-3200.0,Zomato and restaurant,food,Zomato,2025-02-18 00:00:00
+261,jahnavi,-1500.0,Internet bill,bills,Provider,2025-02-20 00:00:00
+262,jahnavi,-1100.0,Coffee and snacks,food,Cafe,2025-02-25 00:00:00
+263,jahnavi,-2000.0,Online shopping,shopping,Flipkart,2025-02-26 00:00:00
+264,jahnavi,-800.0,Cab to airport,transport,Uber,2025-02-27 00:00:00
+265,jahnavi,50000.0,Monthly salary,other,Company,2025-03-01 00:00:00

@@ -10,6 +10,8 @@ import calendar
 from collections import defaultdict
 import sys
 import os
+import smtplib
+from email.message import EmailMessage
 
 # Add src to path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -33,6 +35,13 @@ DATA_USERS_CSV = os.path.join("data", "users.csv")
 SAMPLE_TRANSACTIONS = os.path.join("data", "sample_transactions.csv")
 SAMPLE_USERS = os.path.join("data", "sample_users.csv")
 TRANSACTIONS_DISPLAY_LIMIT = 50  # Mini project: show up to 50 in dashboard list
+
+# Simple mail settings (configure via environment variables for real usage)
+SMTP_HOST = os.environ.get("SMTP_HOST")  # e.g. smtp.gmail.com
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER")  # your email / SMTP username
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")  # app password / SMTP password
+FROM_EMAIL = os.environ.get("FROM_EMAIL") or SMTP_USER
 
 # Add built-in functions and types to Jinja2 template context
 import builtins
@@ -123,6 +132,35 @@ def switch_to_csv_loader():
         random_state=42,
     )
     return pipeline, data_loader
+
+
+def send_registration_email(to_email: str, user_id: str) -> None:
+    """
+    Send a simple \"you have registered\" email.
+    Uses SMTP_* env vars; fails silently if not configured.
+    """
+    if not to_email or not SMTP_HOST or not SMTP_USER or not SMTP_PASSWORD or not FROM_EMAIL:
+        return
+    msg = EmailMessage()
+    msg["Subject"] = "Registration successful - Finance ML Mini App"
+    msg["From"] = FROM_EMAIL
+    msg["To"] = to_email
+    body = (
+        f"Hi {user_id},\n\n"
+        "Your registration on the Finance ML mini project app was successful.\n"
+        "You can log in again with this email to see your dashboard, charts and past transactions.\n\n"
+        "Best regards,\n"
+        "Finance ML App"
+    )
+    msg.set_content(body)
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(msg)
+    except Exception:
+        # For a mini project we don't hard-fail on email issues.
+        pass
 
 
 def append_user_to_csv(user_id, email, monthly_income, savings_goal=0.0):
@@ -615,6 +653,11 @@ def register():
             flash('User ID is required for new registration.', 'warning')
             return redirect(url_for('register', email=email))
         append_user_to_csv(user_id, email, monthly_income, savings_goal)
+        # Send a simple registration email (best-effort, no hard failure if SMTP not configured)
+        try:
+            send_registration_email(email, user_id)
+        except Exception:
+            pass
         switch_to_csv_loader()
         user_profile = UserProfile(
             user_id=user_id,
