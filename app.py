@@ -32,6 +32,7 @@ DATA_TRANSACTIONS_CSV = os.path.join("data", "transactions.csv")
 DATA_USERS_CSV = os.path.join("data", "users.csv")
 SAMPLE_TRANSACTIONS = os.path.join("data", "sample_transactions.csv")
 SAMPLE_USERS = os.path.join("data", "sample_users.csv")
+TRANSACTIONS_DISPLAY_LIMIT = 50  # Mini project: show up to 50 in dashboard list
 
 # Add built-in functions and types to Jinja2 template context
 import builtins
@@ -152,10 +153,81 @@ def append_transaction_to_csv(transaction):
         w.writerow(row)
 
 
+def _count_user_transactions_in_csv(user_id: str) -> int:
+    """Count transactions for a user in the persisted CSV (fast, no pandas)."""
+    if not user_id or not os.path.exists(DATA_TRANSACTIONS_CSV):
+        return 0
+    n = 0
+    with open(DATA_TRANSACTIONS_CSV, "r", newline="", encoding="utf-8") as f:
+        reader = __import__("csv").DictReader(f)
+        for row in reader:
+            if (row.get("user_id") or "").strip() == user_id:
+                n += 1
+    return n
+
+
+def seed_user_with_sample_transactions(user_id: str, *, limit: int = None) -> int:
+    """
+    Seed a user with sample transactions if they have none.
+    This makes the mini-project dashboard/charts useful immediately after login/registration.
+    Returns number of rows inserted.
+    """
+    limit = int(limit or TRANSACTIONS_DISPLAY_LIMIT)
+    ensure_data_files()
+    if not user_id:
+        return 0
+    if _count_user_transactions_in_csv(user_id) > 0:
+        return 0
+    if not os.path.exists(SAMPLE_TRANSACTIONS):
+        return 0
+
+    inserted = 0
+    with open(SAMPLE_TRANSACTIONS, "r", newline="", encoding="utf-8") as f:
+        reader = __import__("csv").DictReader(f)
+        for row in reader:
+            if inserted >= limit:
+                break
+            try:
+                amount = float(row.get("amount") or 0.0)
+            except Exception:
+                amount = 0.0
+            desc = (row.get("description") or "").strip()
+            cat = (row.get("category") or "").strip()
+            merch = (row.get("merchant") or "").strip()
+            ts = (row.get("timestamp") or "").strip() or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            next_id = _next_transaction_id()
+            out_row = [next_id, user_id, amount, desc, cat, merch, ts]
+            with open(DATA_TRANSACTIONS_CSV, "a", newline="", encoding="utf-8") as out:
+                w = __import__("csv").writer(out)
+                w.writerow(out_row)
+            inserted += 1
+
+    # Clear loader cache if we're currently using CSV loader
+    try:
+        if data_loader and getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            data_loader._transactions_cache = None
+    except Exception:
+        pass
+    return inserted
+
+
 def initialize_pipeline():
-    """Initialize the ML pipeline."""
+    """
+    Initialize the ML pipeline.
+
+    IMPORTANT: Prefer persisted CSV storage (data/users.csv + data/transactions.csv) when available.
+    This prevents "data lost after refresh/restart" for same-email users.
+    """
     global pipeline, data_loader
     if pipeline is None:
+        ensure_data_files()
+
+        # If persisted files exist, use them by default (app-like behavior).
+        if os.path.exists(DATA_USERS_CSV) and os.path.exists(DATA_TRANSACTIONS_CSV):
+            return switch_to_csv_loader()
+
+        # Fallback: in-memory only (mainly for dev / minimal mode)
         data_loader = WebDataLoader()
         pipeline = FinanceMLPipeline(
             data_loader=data_loader,
@@ -345,7 +417,8 @@ def _parse_transaction_date(date_str):
         return None
 
 
-def _recent_transactions_payload(user_id: str, limit: int = 10) -> list:
+def _recent_transactions_payload(user_id: str, limit: int = None) -> list:
+    limit = limit if limit is not None else TRANSACTIONS_DISPLAY_LIMIT
     pipeline, data_loader = initialize_pipeline()
     txs = data_loader.load_transactions(user_id=user_id) or []
     txs = sorted(txs, key=lambda t: t.timestamp, reverse=True)
@@ -385,6 +458,13 @@ def enter():
     user = get_user_by_email(email)
     if user:
         switch_to_csv_loader()
+        # If user has no saved transactions yet, seed them once so charts are not empty.
+        try:
+            added = seed_user_with_sample_transactions(user["user_id"])
+            if added:
+                flash(f"Loaded {added} sample transactions to get you started.", "info")
+        except Exception:
+            pass
         if pipeline and getattr(pipeline, '_is_trained', None) is False:
             txs = data_loader.load_transactions(user_id=user['user_id']) or []
             if len(txs) >= 2:
@@ -399,35 +479,30 @@ def enter():
 
 @app.route('/load_sample_data')
 def load_sample_data():
-    """Load sample data from CSV files."""
+    """Load sample data into data/transactions.csv so same-email users see it in charts (single source of truth)."""
     global pipeline, data_loader
-    
     try:
-        # Switch to CSV data loader
-        data_loader = CSVDataLoader(
-            transactions_file="data/sample_transactions.csv",
-            users_file="data/sample_users.csv"
-        )
-        
-        # Reinitialize pipeline with CSV loader
-        pipeline = FinanceMLPipeline(
-            data_loader=data_loader,
-            anomaly_contamination=0.05,
-            z_score_threshold=3.0,
-            expense_n_clusters=3,
-            categorization_classifier='naive_bayes',
-            random_state=42
-        )
-        
-        # Load sample user
+        ensure_data_files()
+        # If persisted file is missing/empty, seed from sample so "enter with email" sees data in charts
+        if not os.path.exists(DATA_TRANSACTIONS_CSV) and os.path.exists(SAMPLE_TRANSACTIONS):
+            import shutil
+            shutil.copy(SAMPLE_TRANSACTIONS, DATA_TRANSACTIONS_CSV)
+        # Single source of truth: always use data/ so same-email users see past data in charts
+        switch_to_csv_loader()
         sample_user = "user123"
         transactions = data_loader.load_transactions(user_id=sample_user)
         user_profile = data_loader.load_user_profile(sample_user)
-        
-        # Auto-train with available data (works with any amount)
+        if not user_profile and os.path.exists(SAMPLE_USERS):
+            import shutil
+            if not os.path.exists(DATA_USERS_CSV):
+                shutil.copy(SAMPLE_USERS, DATA_USERS_CSV)
+            data_loader._users_cache = None
+            user_profile = data_loader.load_user_profile(sample_user)
         if len(transactions) >= 2:
-            pipeline.train(user_id=sample_user)  # Flexible - trains with available data
-        
+            try:
+                pipeline.train(user_id=sample_user)
+            except Exception:
+                pass
         return render_template('sample_data_loaded.html',
                              user_id=sample_user,
                              transaction_count=len(transactions),
@@ -454,6 +529,13 @@ def register():
             # Same email → load their data and go to dashboard (no data lost)
             switch_to_csv_loader()
             existing_id = existing["user_id"]
+            # If they never added transactions before, seed once so charts + list are populated.
+            try:
+                added = seed_user_with_sample_transactions(existing_id)
+                if added:
+                    flash(f"Loaded {added} sample transactions to get you started.", "info")
+            except Exception:
+                pass
             if pipeline and getattr(pipeline, '_is_trained', None) is False:
                 txs = data_loader.load_transactions(user_id=existing_id) or []
                 if len(txs) >= 2:
@@ -475,6 +557,11 @@ def register():
             preferences={'email': email},
         )
         data_loader.add_user_profile(user_profile)
+        # New users: seed with sample transactions so dashboard is not empty in demos.
+        try:
+            seed_user_with_sample_transactions(user_id)
+        except Exception:
+            pass
         flash('Registration successful. Continue to your dashboard.', 'success')
         return redirect(url_for('dashboard', user_id=user_id))
     prefill_email = request.args.get('email', '')
@@ -505,8 +592,8 @@ def dashboard(user_id):
     selected_month = focus_month.strftime("%Y-%m")
     selected_scope = scope_param
 
-    # Load user transactions
-    transactions = data_loader.load_transactions(user_id=user_id)
+    # Load user transactions (single source: data/transactions.csv when entered by email)
+    transactions = data_loader.load_transactions(user_id=user_id) or []
     user_profile = data_loader.load_user_profile(user_id)
     monthly_income = getattr(user_profile, "monthly_income", None) if user_profile else None
 
@@ -610,9 +697,13 @@ def dashboard(user_id):
     
     chart_data = _chart_data_for_user(user_id, focus_month=focus_month, scope=scope_param)
     focus_month_label = f"{calendar.month_abbr[focus_month.month]} {focus_month.year}"
+    # Sorted list for dashboard (latest first, cap at 50 so charts and list use same data)
+    transactions_sorted = sorted(transactions or [], key=lambda t: getattr(t, 'timestamp', datetime.min), reverse=True)
+    transactions_display = transactions_sorted[:TRANSACTIONS_DISPLAY_LIMIT]
     return render_template('dashboard.html', 
                          user_id=user_id,
                          transactions=transactions,
+                         transactions_display=transactions_display,
                          user_profile=user_profile,
                          is_trained=is_trained,
                          insights=insights,
@@ -781,7 +872,7 @@ def api_dashboard_snapshot(user_id):
                 "transaction_count": len(txs),
                 "is_trained": bool(getattr(pipeline, "_is_trained", False)),
                 "charts": charts,
-                "recent_transactions": _recent_transactions_payload(user_id, limit=10),
+                "recent_transactions": _recent_transactions_payload(user_id, limit=TRANSACTIONS_DISPLAY_LIMIT),
             }
         )
     except Exception as e:

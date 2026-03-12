@@ -1,3 +1,8 @@
 user_id,category,budget_limit
 user123,food,7777.0
 user123,transport,2222.0
+Deepika,education,5000.0
+Deepika,entertainment,1000.0
+Deepika,food,8000.0
+Deepika,shopping,5000.0
+Deepika,transport,3000.0

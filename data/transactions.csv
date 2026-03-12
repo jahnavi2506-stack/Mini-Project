@@ -59,3 +59,57 @@ transaction_id,user_id,amount,description,category,merchant,timestamp
 48,user123,-3000.0,Online purchase,shopping,Amazon,2025-03-01 00:00:00
 49,user123,-2500.0,Electricity and phone,bills,Board,2025-03-05 00:00:00
 50,user123,-800.0,Coffee and snacks,food,Cafe,2025-03-06 00:00:00
+61,Deepika,50000.0,Monthly salary,other,Company,2024-10-01 00:00:00
+62,Deepika,-15000.0,Rent payment,other,Landlord,2024-10-01 00:00:00
+63,Deepika,-3200.0,Grocery shopping,food,BigBasket,2024-10-05 00:00:00
+64,Deepika,-800.0,Uber to office,transport,Uber,2024-10-08 00:00:00
+65,Deepika,50000.0,Monthly salary,other,Company,2024-11-01 00:00:00
+66,Deepika,-15000.0,Rent payment,other,Landlord,2024-11-01 00:00:00
+67,Deepika,-1800.0,Grocery at BigBasket,food,BigBasket,2024-11-03 00:00:00
+68,Deepika,-2200.0,Zomato food delivery,food,Zomato,2024-11-06 00:00:00
+69,Deepika,-600.0,Metro recharge,transport,Metro,2024-11-04 00:00:00
+70,Deepika,-1200.0,Phone bill,bills,Operator,2024-11-05 00:00:00
+71,Deepika,-2500.0,Restaurant dinner,food,Restaurant,2024-11-08 00:00:00
+72,Deepika,-3500.0,Shopping at mall,shopping,Mall,2024-11-10 00:00:00
+73,Deepika,-900.0,Uber ride,transport,Uber,2024-11-12 00:00:00
+74,Deepika,-2000.0,Electricity bill,bills,Board,2024-11-15 00:00:00
+75,Deepika,-1500.0,Internet bill,bills,Provider,2024-11-18 00:00:00
+76,Deepika,50000.0,Monthly salary,other,Company,2024-12-01 00:00:00
+77,Deepika,-15000.0,Rent payment,other,Landlord,2024-12-01 00:00:00
+78,Deepika,-50000.0,Electronics purchase,shopping,Electronics Store,2024-12-10 00:00:00
+79,Deepika,-2000.0,Grocery,food,BigBasket,2024-12-03 00:00:00
+80,Deepika,-1800.0,Zomato delivery,food,Zomato,2024-12-07 00:00:00
+81,Deepika,-1200.0,Netflix subscription,other,Netflix,2024-12-05 00:00:00
+82,Deepika,-800.0,Uber,transport,Uber,2024-12-09 00:00:00
+83,Deepika,-3000.0,Shopping,shopping,Amazon,2024-12-14 00:00:00
+84,Deepika,-1100.0,Phone bill,bills,Operator,2024-12-16 00:00:00
+85,Deepika,50000.0,Monthly salary,other,Company,2025-01-01 00:00:00
+86,Deepika,-15000.0,Rent payment,other,Landlord,2025-01-01 00:00:00
+87,Deepika,-2800.0,Grocery,food,BigBasket,2025-01-04 00:00:00
+88,Deepika,-1500.0,Restaurant,food,Restaurant,2025-01-08 00:00:00
+89,Deepika,-700.0,Metro and cab,transport,Metro,2025-01-06 00:00:00
+90,Deepika,-2500.0,Online shopping,shopping,Flipkart,2025-01-12 00:00:00
+91,Deepika,-2000.0,Electricity bill,bills,Board,2025-01-15 00:00:00
+92,Deepika,50000.0,Monthly salary,other,Company,2025-02-01 00:00:00
+93,Deepika,-15000.0,Rent payment,other,Landlord,2025-02-01 00:00:00
+94,Deepika,-3000.0,Grocery,food,BigBasket,2025-02-05 00:00:00
+95,Deepika,-2400.0,Zomato and cafe,food,Zomato,2025-02-10 00:00:00
+96,Deepika,-900.0,Uber,transport,Uber,2025-02-14 00:00:00
+97,Deepika,-1800.0,Bills,bills,Provider,2025-02-18 00:00:00
+98,Deepika,-2200.0,Shopping,shopping,Mall,2025-02-22 00:00:00
+99,Deepika,-1500.0,Restaurant,food,Restaurant,2025-02-28 00:00:00
+100,Deepika,-1200.0,Phone bill,bills,Operator,2025-02-02 00:00:00
+101,Deepika,-1800.0,Grocery,food,BigBasket,2025-02-04 00:00:00
+102,Deepika,-600.0,Metro recharge,transport,Metro,2025-02-07 00:00:00
+103,Deepika,-2500.0,Electricity bill,bills,Board,2025-02-12 00:00:00
+104,Deepika,-900.0,Uber ride,transport,Uber,2025-02-15 00:00:00
+105,Deepika,-3200.0,Zomato and restaurant,food,Zomato,2025-02-18 00:00:00
+106,Deepika,-1500.0,Internet bill,bills,Provider,2025-02-20 00:00:00
+107,Deepika,-1100.0,Coffee and snacks,food,Cafe,2025-02-25 00:00:00
+108,Deepika,-2000.0,Online shopping,shopping,Flipkart,2025-02-26 00:00:00
+109,Deepika,-800.0,Cab to airport,transport,Uber,2025-02-27 00:00:00
+110,Deepika,50000.0,Monthly salary,other,Company,2025-03-01 00:00:00
+111,Deepika,-2449.0,Exam fee,education,,2026-02-12 00:00:00
+112,Deepika,-1000.0,Swiggy,food,,2026-03-12 00:00:00
+113,Deepika,-500.0,Netflix,entertainment,,2026-03-12 00:00:00
+114,Deepika,-349.0,Amazon,shopping,,2026-03-04 00:00:00
