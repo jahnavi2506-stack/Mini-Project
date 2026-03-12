@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Enter - Finance ML{% endblock %}
+
+{% block content %}
+<div class="page-header" style="border-bottom: none; padding-bottom: 0;">
+    <h1>Enter your account</h1>
+    <p class="text-muted">Use your email to continue to your dashboard. New users will be asked to register.</p>
+</div>
+
+<form method="POST" action="{{ url_for('enter') }}" class="form-grid" style="max-width: 400px;">
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required placeholder="e.g. user123@gmail.com" value="{{ request.form.get('email', '') }}">
+    </div>
+    <div class="form-actions" style="display: flex; align-items: center; gap: 12px;">
+        <button type="submit" class="btn btn-primary">Continue</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</form>
+
+<p style="margin-top: 16px; color: var(--text-muted, #64748b); font-size: 0.9rem;">
+    Don't have an account? <a href="{{ url_for('register') }}">Register here</a>.
+</p>
+{% endblock %}

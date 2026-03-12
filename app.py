@@ -27,6 +27,12 @@ from src.category_predictor import predict_category
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
 
+# Data files for persistence (enter by email, saved data)
+DATA_TRANSACTIONS_CSV = os.path.join("data", "transactions.csv")
+DATA_USERS_CSV = os.path.join("data", "users.csv")
+SAMPLE_TRANSACTIONS = os.path.join("data", "sample_transactions.csv")
+SAMPLE_USERS = os.path.join("data", "sample_users.csv")
+
 # Add built-in functions and types to Jinja2 template context
 import builtins
 app.jinja_env.globals['abs'] = builtins.abs
@@ -64,6 +70,88 @@ class WebDataLoader(ExampleDataLoader):
         self.user_profiles[user_profile.user_id] = user_profile
 
 
+def ensure_data_files():
+    """Ensure data/transactions.csv and data/users.csv exist; seed from sample files if missing."""
+    os.makedirs("data", exist_ok=True)
+    if not os.path.exists(DATA_TRANSACTIONS_CSV) and os.path.exists(SAMPLE_TRANSACTIONS):
+        import shutil
+        shutil.copy(SAMPLE_TRANSACTIONS, DATA_TRANSACTIONS_CSV)
+    if not os.path.exists(DATA_USERS_CSV) and os.path.exists(SAMPLE_USERS):
+        import shutil
+        shutil.copy(SAMPLE_USERS, DATA_USERS_CSV)
+
+
+def get_user_by_email(email):
+    """Look up user by email in data/users.csv. Returns dict with user_id, email, monthly_income, savings_goal or None."""
+    if not email or not os.path.exists(DATA_USERS_CSV):
+        return None
+    email = (email or "").strip().lower()
+    with open(DATA_USERS_CSV, "r", newline="", encoding="utf-8") as f:
+        reader = __import__("csv").DictReader(f)
+        for row in reader:
+            if (row.get("email") or "").strip().lower() == email:
+                return {
+                    "user_id": (row.get("user_id") or "").strip(),
+                    "email": (row.get("email") or "").strip(),
+                    "monthly_income": _safe_float(row.get("monthly_income"), 0.0),
+                    "savings_goal": _safe_float(row.get("savings_goal"), 0.0),
+                }
+    return None
+
+
+def switch_to_csv_loader():
+    """Switch global data_loader and pipeline to use CSV data files (persisted)."""
+    global pipeline, data_loader
+    ensure_data_files()
+    data_loader = CSVDataLoader(
+        transactions_file=DATA_TRANSACTIONS_CSV,
+        users_file=DATA_USERS_CSV,
+    )
+    pipeline = FinanceMLPipeline(
+        data_loader=data_loader,
+        anomaly_contamination=0.05,
+        z_score_threshold=3.0,
+        expense_n_clusters=3,
+        categorization_classifier='naive_bayes',
+        random_state=42,
+    )
+    return pipeline, data_loader
+
+
+def append_user_to_csv(user_id, email, monthly_income, savings_goal=0.0):
+    """Append a new user to data/users.csv."""
+    ensure_data_files()
+    with open(DATA_USERS_CSV, "a", newline="", encoding="utf-8") as f:
+        w = __import__("csv").writer(f)
+        w.writerow([str(user_id), str(email), float(monthly_income), float(savings_goal)])
+
+
+def _next_transaction_id():
+    """Get next transaction ID from data/transactions.csv."""
+    if not os.path.exists(DATA_TRANSACTIONS_CSV):
+        return 1
+    max_id = 0
+    with open(DATA_TRANSACTIONS_CSV, "r", newline="", encoding="utf-8") as f:
+        reader = __import__("csv").DictReader(f)
+        for row in reader:
+            try:
+                max_id = max(max_id, int(float(row.get("transaction_id", 0))))
+            except (ValueError, TypeError):
+                pass
+    return max_id + 1
+
+
+def append_transaction_to_csv(transaction):
+    """Append a transaction to data/transactions.csv (for persistence)."""
+    ensure_data_files()
+    next_id = _next_transaction_id()
+    ts = transaction.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hasattr(transaction.timestamp, "strftime") else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    row = [next_id, transaction.user_id or "", transaction.amount, transaction.description or "", transaction.category or "", transaction.merchant or "", ts]
+    with open(DATA_TRANSACTIONS_CSV, "a", newline="", encoding="utf-8") as f:
+        w = __import__("csv").writer(f)
+        w.writerow(row)
+
+
 def initialize_pipeline():
     """Initialize the ML pipeline."""
     global pipeline, data_loader
@@ -99,16 +187,15 @@ def _add_months(d: date, months: int) -> date:
     return date(y, m, 1)
 
 
-def _chart_data_for_user(user_id: str) -> dict:
+def _chart_data_for_user(user_id: str, focus_month: date = None, scope: str = "6months") -> dict:
     """
     Build chart-ready aggregates from stored transactions for a user.
-    Returns a dict with monthly spending, category distribution, income vs expense trend,
-    and last-7-days spending.
+    focus_month: first day of the month to focus on (for budget and filtering); default = current month.
+    scope: 'this_month' | '3months' | '6months' | 'all' — range of data to include in charts.
     """
     pipeline, data_loader = initialize_pipeline()
     transactions = data_loader.load_transactions(user_id=user_id) or []
 
-    # Normalize transaction list
     def tx_date(t):
         try:
             return t.timestamp.date()
@@ -116,10 +203,21 @@ def _chart_data_for_user(user_id: str) -> dict:
             return datetime.now().date()
 
     today = datetime.now().date()
+    focus = _month_start(focus_month) if focus_month else _month_start(today)
 
-    # ---- Monthly Spending (last 6 months) ----
-    end_month = _month_start(today)
-    months = [_add_months(end_month, -i) for i in reversed(range(6))]
+    # Number of months for monthly bar from scope
+    if scope == "this_month":
+        n_months = 1
+    elif scope == "3months":
+        n_months = 3
+    elif scope == "all":
+        n_months = 12
+    else:
+        n_months = 6
+
+    # ---- Monthly Spending ----
+    end_month = focus
+    months = [_add_months(end_month, -i) for i in reversed(range(n_months))]
     month_labels = [f"{calendar.month_abbr[m.month]} {m.year}" for m in months]
     monthly_totals = []
     for m in months:
@@ -131,11 +229,25 @@ def _chart_data_for_user(user_id: str) -> dict:
                 total += abs(t.amount)
         monthly_totals.append(round(total, 2))
 
-    # ---- Expense Category Pie ----
-    category_order = ["Food", "Transport", "Shopping", "Bills", "Other"]
-    category_keys = {"food": "Food", "transport": "Transport", "shopping": "Shopping", "bills": "Bills"}
+    # Date range for scope (for pie and trend)
+    range_start = months[0] if months else focus
+    range_end = _add_months(end_month, 1) if scope != "all" else today + timedelta(days=1)
+    if scope == "all" and transactions:
+        range_start = _month_start(min(tx_date(t) for t in transactions))
+    elif scope == "all":
+        range_start = focus
+
+    def in_range(t):
+        d = tx_date(t)
+        return range_start <= d < range_end
+
+    txs_in_scope = [t for t in transactions if in_range(t)]
+
+    # ---- Expense Category Pie (scoped) ----
+    category_order = ["Food", "Transport", "Shopping", "Bills", "Education", "Other"]
+    category_keys = {"food": "Food", "transport": "Transport", "shopping": "Shopping", "bills": "Bills", "education": "Education"}
     category_totals = defaultdict(float)
-    for t in transactions:
+    for t in txs_in_scope:
         amt = t.amount or 0
         if amt >= 0:
             continue
@@ -144,9 +256,10 @@ def _chart_data_for_user(user_id: str) -> dict:
         category_totals[mapped] += abs(amt)
     category_data = [round(category_totals.get(k, 0.0), 2) for k in category_order]
 
-    # ---- Income vs Expense Trend (last 30 days, daily) ----
+    # ---- Income vs Expense Trend (30 days ending at focus month end or today) ----
     trend_days = 30
-    start_day = today - timedelta(days=trend_days - 1)
+    end_day = min(today, range_end - timedelta(days=1)) if range_end else today
+    start_day = end_day - timedelta(days=trend_days - 1)
     labels = [(start_day + timedelta(days=i)) for i in range(trend_days)]
     label_strs = [d.strftime("%b %d") for d in labels]
     income_series = []
@@ -165,9 +278,10 @@ def _chart_data_for_user(user_id: str) -> dict:
         income_series.append(round(inc, 2))
         expense_series.append(round(exp, 2))
 
-    # ---- Daily Spending (last 7 days) ----
+    # ---- Weekly Spending (7 days ending at focus month or today) ----
     week_days = 7
-    w_start = today - timedelta(days=week_days - 1)
+    w_end = min(today, range_end - timedelta(days=1)) if range_end else today
+    w_start = w_end - timedelta(days=week_days - 1)
     w_labels = [(w_start + timedelta(days=i)) for i in range(week_days)]
     w_label_strs = [d.strftime("%a") for d in w_labels]
     w_spend = []
@@ -184,6 +298,51 @@ def _chart_data_for_user(user_id: str) -> dict:
         "income_vs_expense": {"labels": label_strs, "income": income_series, "expense": expense_series},
         "weekly_spending": {"labels": w_label_strs, "data": w_spend},
     }
+
+
+def _available_months(user_id: str, last_n: int = 12) -> list:
+    """Return list of (value_YYYY_MM, label) for month dropdown, most recent first."""
+    today = datetime.now().date()
+    focus = _month_start(today)
+    out = []
+    for i in range(last_n):
+        m = _add_months(focus, -i)
+        out.append((m.strftime("%Y-%m"), f"{calendar.month_abbr[m.month]} {m.year}"))
+    return out
+
+
+def _parse_month(month_str):
+    """Parse YYYY-MM to first day of month, or None if invalid."""
+    if not month_str or not isinstance(month_str, str):
+        return None
+    parts = month_str.strip().split("-")
+    if len(parts) != 2:
+        return None
+    try:
+        y, m = int(parts[0]), int(parts[1])
+        if 1 <= m <= 12:
+            return date(y, m, 1)
+    except (ValueError, TypeError):
+        pass
+    return None
+
+
+def _parse_transaction_date(date_str):
+    """Parse YYYY-MM-DD to datetime at start of day (local), or None to use now."""
+    if not date_str or not isinstance(date_str, str):
+        return None
+    s = date_str.strip()
+    if not s:
+        return None
+    try:
+        parts = s.split("-")
+        if len(parts) != 3:
+            return None
+        y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+        dt = date(y, m, d)
+        return datetime.combine(dt, datetime.min.time())
+    except (ValueError, TypeError):
+        return None
 
 
 def _recent_transactions_payload(user_id: str, limit: int = 10) -> list:
@@ -212,6 +371,30 @@ def _recent_transactions_payload(user_id: str, limit: int = 10) -> list:
 def index():
     """Home page."""
     return render_template('index.html')
+
+
+@app.route('/enter', methods=['GET', 'POST'])
+def enter():
+    """Enter with email: existing user → dashboard with data; new user → register."""
+    if request.method == 'GET':
+        return render_template('enter_email.html')
+    email = (request.form.get('email') or '').strip()
+    if not email:
+        flash('Please enter your email.', 'warning')
+        return redirect(url_for('enter'))
+    user = get_user_by_email(email)
+    if user:
+        switch_to_csv_loader()
+        if pipeline and getattr(pipeline, '_is_trained', None) is False:
+            txs = data_loader.load_transactions(user_id=user['user_id']) or []
+            if len(txs) >= 2:
+                try:
+                    pipeline.train(user_id=user['user_id'])
+                except Exception:
+                    pass
+        flash('Welcome back! Continue to your dashboard.', 'success')
+        return redirect(url_for('dashboard', user_id=user['user_id']))
+    return redirect(url_for('register', email=email))
 
 
 @app.route('/load_sample_data')
@@ -257,39 +440,79 @@ def load_sample_data():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    """User registration page."""
+    """User registration page. New users saved to data/users.csv; existing email → dashboard with past data."""
     if request.method == 'POST':
-        user_id = request.form.get('user_id')
-        email = request.form.get('email')
-        monthly_income = float(request.form.get('monthly_income', 0))
-        
-        pipeline, data_loader = initialize_pipeline()
-        
-        # Create user profile
+        user_id = (request.form.get('user_id') or '').strip()
+        email = (request.form.get('email') or '').strip().lower()
+        monthly_income = _safe_float(request.form.get('monthly_income'), 0.0)
+        savings_goal = _safe_float(request.form.get('savings_goal'), 0.0)
+        if not email:
+            flash('Email is required.', 'warning')
+            return redirect(url_for('register', email=request.form.get('email', '')))
+        existing = get_user_by_email(email)
+        if existing:
+            # Same email → load their data and go to dashboard (no data lost)
+            switch_to_csv_loader()
+            existing_id = existing["user_id"]
+            if pipeline and getattr(pipeline, '_is_trained', None) is False:
+                txs = data_loader.load_transactions(user_id=existing_id) or []
+                if len(txs) >= 2:
+                    try:
+                        pipeline.train(user_id=existing_id)
+                    except Exception:
+                        pass
+            flash('This email is already registered. Your previous data is loaded below.', 'success')
+            return redirect(url_for('dashboard', user_id=existing_id))
+        if not user_id:
+            flash('User ID is required for new registration.', 'warning')
+            return redirect(url_for('register', email=email))
+        append_user_to_csv(user_id, email, monthly_income, savings_goal)
+        switch_to_csv_loader()
         user_profile = UserProfile(
             user_id=user_id,
-            monthly_income=monthly_income
+            monthly_income=monthly_income,
+            savings_goal=savings_goal,
+            preferences={'email': email},
         )
         data_loader.add_user_profile(user_profile)
-        
-        return render_template('register_success.html', user_id=user_id)
-    
-    return render_template('register.html')
+        flash('Registration successful. Continue to your dashboard.', 'success')
+        return redirect(url_for('dashboard', user_id=user_id))
+    prefill_email = request.args.get('email', '')
+    return render_template('register.html', prefill_email=prefill_email)
+
+
+SCOPE_OPTIONS = [
+    ("this_month", "This month only"),
+    ("3months", "Last 3 months"),
+    ("6months", "Last 6 months"),
+    ("all", "All time"),
+]
 
 
 @app.route('/dashboard/<user_id>')
 def dashboard(user_id):
-    """User dashboard."""
+    """User dashboard. Supports ?month=YYYY-MM&scope=this_month|3months|6months|all for dynamic view."""
     pipeline, data_loader = initialize_pipeline()
-    
+    month_param = request.args.get("month", "").strip()
+    scope_param = request.args.get("scope", "6months").strip().lower()
+    if scope_param not in [s[0] for s in SCOPE_OPTIONS]:
+        scope_param = "6months"
+    focus_month = _parse_month(month_param)
+    today = datetime.now().date()
+    if not focus_month:
+        focus_month = _month_start(today)
+    available_months = _available_months(user_id, 12)
+    selected_month = focus_month.strftime("%Y-%m")
+    selected_scope = scope_param
+
     # Load user transactions
     transactions = data_loader.load_transactions(user_id=user_id)
     user_profile = data_loader.load_user_profile(user_id)
     monthly_income = getattr(user_profile, "monthly_income", None) if user_profile else None
 
-    # Budget tracking
+    # Budget tracking for selected month
     budgets = BudgetManager.get_user_budgets(user_id)
-    category_spending = BudgetManager.calculate_category_spending(transactions)
+    category_spending = BudgetManager.calculate_category_spending(transactions, month=focus_month)
     budget_summary = []
     for cat, limit in budgets.items():
         spent = float(category_spending.get(cat, 0.0))
@@ -385,6 +608,8 @@ def dashboard(user_id):
     except Exception:
         finance_score = None
     
+    chart_data = _chart_data_for_user(user_id, focus_month=focus_month, scope=scope_param)
+    focus_month_label = f"{calendar.month_abbr[focus_month.month]} {focus_month.year}"
     return render_template('dashboard.html', 
                          user_id=user_id,
                          transactions=transactions,
@@ -397,7 +622,13 @@ def dashboard(user_id):
                          budgets=budgets,
                          category_spending=category_spending,
                          budget_summary=budget_summary,
-                         finance_score=finance_score)
+                         finance_score=finance_score,
+                         available_months=available_months,
+                         selected_month=selected_month,
+                         selected_scope=selected_scope,
+                         scope_options=SCOPE_OPTIONS,
+                         chart_data=chart_data,
+                         focus_month_label=focus_month_label)
 
 
 @app.route('/add_transaction/<user_id>', methods=['GET', 'POST'])
@@ -410,24 +641,26 @@ def add_transaction(user_id):
         description = request.form.get('description', '')
         category = request.form.get('category', '')
         merchant = request.form.get('merchant', '')
+        tx_timestamp = _parse_transaction_date(request.form.get('transaction_date')) or datetime.now()
 
         # Auto-predict category if user didn't choose one
         predicted = None
         if not category:
             predicted = predict_category(description, merchant)
             category = predicted
-        
-        # Create transaction
+
         transaction = Transaction(
-            amount=-abs(amount),  # Make negative for expenses
+            amount=-abs(amount),
             description=description,
-            timestamp=datetime.now(),
+            timestamp=tx_timestamp,
             category=category if category else None,
             merchant=merchant if merchant else None,
             user_id=user_id
         )
-        
         data_loader.add_transaction(transaction)
+        # Persist so past data is shown when user re-enters or registers again
+        if getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            append_transaction_to_csv(transaction)
         
         # Auto-train pipeline with available data (flexible - works with any amount)
         user_transactions = data_loader.load_transactions(user_id=user_id)
@@ -512,26 +745,42 @@ def insights(user_id):
 
 @app.route('/api/financial_insights/<user_id>')
 def api_financial_insights(user_id):
-    """Return chart-ready aggregates for Chart.js."""
+    """Return chart-ready aggregates for Chart.js. Optional: ?month=YYYY-MM&scope=6months."""
     try:
-        return jsonify({"ok": True, "user_id": user_id, "charts": _chart_data_for_user(user_id)})
+        month_param = request.args.get("month", "").strip()
+        scope_param = request.args.get("scope", "6months").strip().lower()
+        if scope_param not in [s[0] for s in SCOPE_OPTIONS]:
+            scope_param = "6months"
+        focus_month = _parse_month(month_param)
+        if not focus_month:
+            focus_month = _month_start(datetime.now().date())
+        charts = _chart_data_for_user(user_id, focus_month=focus_month, scope=scope_param)
+        return jsonify({"ok": True, "user_id": user_id, "charts": charts})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
 @app.route('/api/dashboard_snapshot/<user_id>')
 def api_dashboard_snapshot(user_id):
-    """Return charts + latest transactions so dashboard can update without refresh."""
+    """Return charts + latest transactions. Optional: ?month=YYYY-MM&scope=6months."""
     try:
         pipeline, data_loader = initialize_pipeline()
         txs = data_loader.load_transactions(user_id=user_id) or []
+        month_param = request.args.get("month", "").strip()
+        scope_param = request.args.get("scope", "6months").strip().lower()
+        if scope_param not in [s[0] for s in SCOPE_OPTIONS]:
+            scope_param = "6months"
+        focus_month = _parse_month(month_param)
+        if not focus_month:
+            focus_month = _month_start(datetime.now().date())
+        charts = _chart_data_for_user(user_id, focus_month=focus_month, scope=scope_param)
         return jsonify(
             {
                 "ok": True,
                 "user_id": user_id,
                 "transaction_count": len(txs),
                 "is_trained": bool(getattr(pipeline, "_is_trained", False)),
-                "charts": _chart_data_for_user(user_id),
+                "charts": charts,
                 "recent_transactions": _recent_transactions_payload(user_id, limit=10),
             }
         )
@@ -554,13 +803,15 @@ def api_add_transaction(user_id):
         category = (payload.get("category") or "").strip()
         merchant = (payload.get("merchant") or "").strip()
         kind = (payload.get("kind") or "expense").strip().lower()
+        tx_timestamp = _parse_transaction_date(
+            payload.get("transaction_date") or payload.get("date") or ""
+        ) or datetime.now()
 
         if not description:
             return jsonify({"ok": False, "error": "Description is required"}), 400
         if amount <= 0:
             return jsonify({"ok": False, "error": "Amount must be greater than 0"}), 400
 
-        # Auto-predict category if missing
         if not category:
             category = predict_category(description, merchant)
 
@@ -568,12 +819,15 @@ def api_add_transaction(user_id):
         transaction = Transaction(
             amount=signed_amount,
             description=description,
-            timestamp=datetime.now(),
+            timestamp=tx_timestamp,
             category=category if category else None,
             merchant=merchant if merchant else None,
             user_id=user_id,
         )
         data_loader.add_transaction(transaction)
+        # Persist so past data is shown when user re-enters or registers again
+        if getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            append_transaction_to_csv(transaction)
 
         # Train if possible (keeps existing behavior)
         user_transactions = data_loader.load_transactions(user_id=user_id) or []
@@ -636,6 +890,7 @@ def update_budgets():
 
 
 if __name__ == '__main__':
+    ensure_data_files()
     initialize_pipeline()
     print("\n" + "="*70)
     print("Finance ML Pipeline Web Application")

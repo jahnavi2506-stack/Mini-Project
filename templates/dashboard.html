@@ -21,6 +21,43 @@
     </div>
 </div>
 
+<div class="card mb-3" style="padding: var(--space-3);">
+    <div class="action-row" style="flex-wrap: wrap; gap: var(--space-3); align-items: center;">
+        <span class="text-muted" style="font-weight: 600;">View options</span>
+        <form method="get" action="/dashboard/{{ user_id }}" id="dashboard-filters" style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);">
+            <label class="flex-wrap" style="align-items: center; gap: 6px;">
+                <span class="text-muted" style="font-size: 0.9rem;">Month</span>
+                <select name="month" id="filter-month" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border, #e2e8f0);">
+                    {% for value, label in available_months %}
+                    <option value="{{ value }}" {% if value == selected_month %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="flex-wrap" style="align-items: center; gap: 6px;">
+                <span class="text-muted" style="font-size: 0.9rem;">Data</span>
+                <select name="scope" id="filter-scope" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border, #e2e8f0);">
+                    {% for value, label in scope_options %}
+                    <option value="{{ value }}" {% if value == selected_scope %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="btn btn-secondary">Apply</button>
+        </form>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('dashboard-filters');
+    var monthSel = document.getElementById('filter-month');
+    var scopeSel = document.getElementById('filter-scope');
+    if (form && monthSel && scopeSel) {
+        function applyFilters() { form.submit(); }
+        monthSel.addEventListener('change', applyFilters);
+        scopeSel.addEventListener('change', applyFilters);
+    }
+});
+</script>
+
 <div class="stats-row">
     <div class="card">
         <span class="text-muted">Transactions</span>
@@ -90,7 +127,7 @@
 
         <div class="card" id="budget-summary-card">
             <div class="action-row">
-                <h3 class="mb-0">Budget Summary (This Month)</h3>
+                <h3 class="mb-0">Budget Summary ({{ focus_month_label or 'This month' }})</h3>
                 <div class="flex-wrap">
                     <span class="text-muted">Category budgets</span>
                     <button type="button" class="btn btn-secondary" id="btn-manage-budgets">Manage Budgets</button>
@@ -280,6 +317,7 @@
     });
 
     if (window.IntelliBankFinancialInsights) {
+        window.__DASHBOARD_CHART_DATA__ = {{ chart_data|tojson }};
         window.IntelliBankFinancialInsights.init({{ user_id|tojson }});
     }
 
@@ -295,7 +333,8 @@
                 rows = [
                     { category: 'food', limit: 8000 },
                     { category: 'transport', limit: 3000 },
-                    { category: 'shopping', limit: 5000 }
+                    { category: 'shopping', limit: 5000 },
+                    { category: 'education', limit: 5000 }
                 ];
             }
 

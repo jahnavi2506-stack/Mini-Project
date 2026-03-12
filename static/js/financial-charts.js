@@ -210,7 +210,12 @@
     const charts = { monthly: null, pie: null, trend: null, weekly: null };
 
     async function loadAndRender() {
-      const data = await fetchJSON('/api/financial_insights/' + encodeURIComponent(userId));
+      let data;
+      if (window.__DASHBOARD_CHART_DATA__) {
+        data = { ok: true, charts: window.__DASHBOARD_CHART_DATA__ };
+      } else {
+        data = await fetchJSON('/api/financial_insights/' + encodeURIComponent(userId));
+      }
       const c = data.charts;
       if (!charts.monthly) {
         charts.monthly = createMonthlyBar(els.monthly.getContext('2d'), c.monthly_spending);
@@ -228,7 +233,14 @@
     }
 
     async function refreshSnapshot() {
-      const snap = await fetchJSON('/api/dashboard_snapshot/' + encodeURIComponent(userId));
+      const monthEl = document.getElementById('filter-month');
+      const scopeEl = document.getElementById('filter-scope');
+      let url = '/api/dashboard_snapshot/' + encodeURIComponent(userId);
+      if (monthEl && scopeEl) {
+        const params = new URLSearchParams({ month: monthEl.value || '', scope: scopeEl.value || '6months' });
+        url += '?' + params.toString();
+      }
+      const snap = await fetchJSON(url);
       const c = snap.charts;
       updateChart(charts.monthly, c.monthly_spending.labels, c.monthly_spending.data);
       charts.pie.data.labels = c.expense_distribution.labels;
@@ -245,6 +257,8 @@
     const quickAddBtn = $('btn-quick-add');
     if (quickAddBtn && window.MiniApp && MiniApp.showModal) {
       quickAddBtn.addEventListener('click', function () {
+        const d = new Date();
+        const todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const body = `
           <form id=\"quick-add-form\" class=\"grid-2\" style=\"margin-top: 12px;\">
             <div class=\"form-group\">
@@ -258,6 +272,10 @@
               <label for=\"qa-amount\">Amount (Rs)</label>
               <input id=\"qa-amount\" name=\"amount\" type=\"number\" min=\"0\" step=\"0.01\" required placeholder=\"1000.00\" />
             </div>
+            <div class=\"form-group\">
+              <label for=\"qa-transaction_date\">Date</label>
+              <input id=\"qa-transaction_date\" name=\"transaction_date\" type=\"date\" required value=\"` + todayStr + `\" />
+            </div>
             <div class=\"form-group\" style=\"grid-column: 1 / -1;\">
               <label for=\"qa-description\">Description</label>
               <input id=\"qa-description\" name=\"description\" type=\"text\" required placeholder=\"e.g. Salary, Grocery, Uber\" />
@@ -270,6 +288,7 @@
                 <option value=\"transport\">Transport</option>
                 <option value=\"shopping\">Shopping</option>
                 <option value=\"bills\">Bills</option>
+                <option value=\"education\">Education</option>
                 <option value=\"other\">Other</option>
               </select>
             </div>

@@ -13,8 +13,9 @@ KEYWORDS = {
     "food": ["pizza", "dominos", "swiggy", "zomato", "kfc", "mcd", "restaurant", "cafe", "food", "burger"],
     "transport": ["uber", "ola", "metro", "bus", "train", "fuel", "petrol", "diesel", "rapido", "auto"],
     "shopping": ["amazon", "flipkart", "myntra", "shopping", "store", "mall"],
-    "entertainment": ["netflix", "movie", "spotify", "prime video", "hotstar", "cinema", "gaming"],
     "bills": ["electricity", "water", "gas", "recharge", "internet", "wifi", "broadband", "bill", "rent"],
+    "education": ["tuition", "course", "udemy", "coursera", "school", "college", "university", "books", "fee", "education", "training", "certification"],
+    "entertainment": ["netflix", "movie", "spotify", "prime video", "hotstar", "cinema", "gaming"],
 }
 
 
