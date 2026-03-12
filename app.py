@@ -108,6 +108,12 @@ def switch_to_csv_loader():
         transactions_file=DATA_TRANSACTIONS_CSV,
         users_file=DATA_USERS_CSV,
     )
+    # CSVDataLoader caches; start fresh from disk
+    try:
+        data_loader._transactions_cache = None
+        data_loader._users_cache = None
+    except Exception:
+        pass
     pipeline = FinanceMLPipeline(
         data_loader=data_loader,
         anomaly_contamination=0.05,
@@ -151,6 +157,12 @@ def append_transaction_to_csv(transaction):
     with open(DATA_TRANSACTIONS_CSV, "a", newline="", encoding="utf-8") as f:
         w = __import__("csv").writer(f)
         w.writerow(row)
+    # Invalidate CSV loader cache so dashboard/charts reflect saved rows after refresh.
+    try:
+        if data_loader and getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            data_loader._transactions_cache = None
+    except Exception:
+        pass
 
 
 def _count_user_transactions_in_csv(user_id: str) -> int:
@@ -266,6 +278,12 @@ def _chart_data_for_user(user_id: str, focus_month: date = None, scope: str = "6
     scope: 'this_month' | '3months' | '6months' | 'all' — range of data to include in charts.
     """
     pipeline, data_loader = initialize_pipeline()
+    # CSVDataLoader caches file contents; clear cache so charts reflect saved transactions for existing email.
+    try:
+        if data_loader and getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            data_loader._transactions_cache = None
+    except Exception:
+        pass
     transactions = data_loader.load_transactions(user_id=user_id) or []
 
     def tx_date(t):
@@ -373,14 +391,62 @@ def _chart_data_for_user(user_id: str, focus_month: date = None, scope: str = "6
 
 
 def _available_months(user_id: str, last_n: int = 12) -> list:
-    """Return list of (value_YYYY_MM, label) for month dropdown, most recent first."""
+    """
+    Return list of (value_YYYY_MM, label) for month dropdown, most recent first.
+
+    IMPORTANT: derive from the user's actual transactions so charts don't default
+    to an empty future month (e.g. 2026) when data exists in earlier months.
+    """
+    pipeline, data_loader = initialize_pipeline()
+    try:
+        if data_loader and getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            data_loader._transactions_cache = None
+    except Exception:
+        pass
+    txs = data_loader.load_transactions(user_id=user_id) or []
+
+    months = set()
+    for t in txs:
+        try:
+            d = t.timestamp.date()
+        except Exception:
+            continue
+        months.add((d.year, d.month))
+
+    # If we have real months, show them (latest first), capped.
+    if months:
+        sorted_months = sorted(months, key=lambda ym: (ym[0], ym[1]), reverse=True)[: int(last_n or 12)]
+        return [(f"{y:04d}-{m:02d}", f"{calendar.month_abbr[m]} {y}") for (y, m) in sorted_months]
+
+    # Fallback: last N months from today
     today = datetime.now().date()
     focus = _month_start(today)
     out = []
-    for i in range(last_n):
+    for i in range(int(last_n or 12)):
         m = _add_months(focus, -i)
         out.append((m.strftime("%Y-%m"), f"{calendar.month_abbr[m.month]} {m.year}"))
     return out
+
+
+def _latest_transaction_month(user_id: str):
+    """Return first day of latest month that has transactions for this user, else None."""
+    pipeline, data_loader = initialize_pipeline()
+    try:
+        if data_loader and getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            data_loader._transactions_cache = None
+    except Exception:
+        pass
+    txs = data_loader.load_transactions(user_id=user_id) or []
+    latest = None
+    for t in txs:
+        try:
+            d = t.timestamp.date()
+        except Exception:
+            continue
+        md = date(d.year, d.month, 1)
+        if latest is None or md > latest:
+            latest = md
+    return latest
 
 
 def _parse_month(month_str):
@@ -587,12 +653,21 @@ def dashboard(user_id):
     focus_month = _parse_month(month_param)
     today = datetime.now().date()
     if not focus_month:
-        focus_month = _month_start(today)
+        # Default to latest month that actually has data for this user (so charts aren't empty)
+        focus_month = _latest_transaction_month(user_id) or _month_start(today)
     available_months = _available_months(user_id, 12)
+    # If query month was missing, align focus month to the first dropdown option (latest data month)
+    if not month_param and available_months:
+        focus_month = _parse_month(available_months[0][0]) or focus_month
     selected_month = focus_month.strftime("%Y-%m")
     selected_scope = scope_param
 
-    # Load user transactions (single source: data/transactions.csv when entered by email)
+    # Load user transactions (CSV loader caches; force reload so saved file data shows after refresh)
+    try:
+        if data_loader and getattr(data_loader, "transactions_file", None) == DATA_TRANSACTIONS_CSV:
+            data_loader._transactions_cache = None
+    except Exception:
+        pass
     transactions = data_loader.load_transactions(user_id=user_id) or []
     user_profile = data_loader.load_user_profile(user_id)
     monthly_income = getattr(user_profile, "monthly_income", None) if user_profile else None
@@ -844,7 +919,7 @@ def api_financial_insights(user_id):
             scope_param = "6months"
         focus_month = _parse_month(month_param)
         if not focus_month:
-            focus_month = _month_start(datetime.now().date())
+            focus_month = _latest_transaction_month(user_id) or _month_start(datetime.now().date())
         charts = _chart_data_for_user(user_id, focus_month=focus_month, scope=scope_param)
         return jsonify({"ok": True, "user_id": user_id, "charts": charts})
     except Exception as e:
@@ -863,7 +938,7 @@ def api_dashboard_snapshot(user_id):
             scope_param = "6months"
         focus_month = _parse_month(month_param)
         if not focus_month:
-            focus_month = _month_start(datetime.now().date())
+            focus_month = _latest_transaction_month(user_id) or _month_start(datetime.now().date())
         charts = _chart_data_for_user(user_id, focus_month=focus_month, scope=scope_param)
         return jsonify(
             {

@@ -113,3 +113,104 @@ transaction_id,user_id,amount,description,category,merchant,timestamp
 112,Deepika,-1000.0,Swiggy,food,,2026-03-12 00:00:00
 113,Deepika,-500.0,Netflix,entertainment,,2026-03-12 00:00:00
 114,Deepika,-349.0,Amazon,shopping,,2026-03-04 00:00:00
+115,john_doe,50000.0,Monthly salary,other,Company,2024-10-01 00:00:00
+116,john_doe,-15000.0,Rent payment,other,Landlord,2024-10-01 00:00:00
+117,john_doe,-3200.0,Grocery shopping,food,BigBasket,2024-10-05 00:00:00
+118,john_doe,-800.0,Uber to office,transport,Uber,2024-10-08 00:00:00
+119,john_doe,50000.0,Monthly salary,other,Company,2024-11-01 00:00:00
+120,john_doe,-15000.0,Rent payment,other,Landlord,2024-11-01 00:00:00
+121,john_doe,-1800.0,Grocery at BigBasket,food,BigBasket,2024-11-03 00:00:00
+122,john_doe,-2200.0,Zomato food delivery,food,Zomato,2024-11-06 00:00:00
+123,john_doe,-600.0,Metro recharge,transport,Metro,2024-11-04 00:00:00
+124,john_doe,-1200.0,Phone bill,bills,Operator,2024-11-05 00:00:00
+125,john_doe,-2500.0,Restaurant dinner,food,Restaurant,2024-11-08 00:00:00
+126,john_doe,-3500.0,Shopping at mall,shopping,Mall,2024-11-10 00:00:00
+127,john_doe,-900.0,Uber ride,transport,Uber,2024-11-12 00:00:00
+128,john_doe,-2000.0,Electricity bill,bills,Board,2024-11-15 00:00:00
+129,john_doe,-1500.0,Internet bill,bills,Provider,2024-11-18 00:00:00
+130,john_doe,50000.0,Monthly salary,other,Company,2024-12-01 00:00:00
+131,john_doe,-15000.0,Rent payment,other,Landlord,2024-12-01 00:00:00
+132,john_doe,-50000.0,Electronics purchase,shopping,Electronics Store,2024-12-10 00:00:00
+133,john_doe,-2000.0,Grocery,food,BigBasket,2024-12-03 00:00:00
+134,john_doe,-1800.0,Zomato delivery,food,Zomato,2024-12-07 00:00:00
+135,john_doe,-1200.0,Netflix subscription,other,Netflix,2024-12-05 00:00:00
+136,john_doe,-800.0,Uber,transport,Uber,2024-12-09 00:00:00
+137,john_doe,-3000.0,Shopping,shopping,Amazon,2024-12-14 00:00:00
+138,john_doe,-1100.0,Phone bill,bills,Operator,2024-12-16 00:00:00
+139,john_doe,50000.0,Monthly salary,other,Company,2025-01-01 00:00:00
+140,john_doe,-15000.0,Rent payment,other,Landlord,2025-01-01 00:00:00
+141,john_doe,-2800.0,Grocery,food,BigBasket,2025-01-04 00:00:00
+142,john_doe,-1500.0,Restaurant,food,Restaurant,2025-01-08 00:00:00
+143,john_doe,-700.0,Metro and cab,transport,Metro,2025-01-06 00:00:00
+144,john_doe,-2500.0,Online shopping,shopping,Flipkart,2025-01-12 00:00:00
+145,john_doe,-2000.0,Electricity bill,bills,Board,2025-01-15 00:00:00
+146,john_doe,50000.0,Monthly salary,other,Company,2025-02-01 00:00:00
+147,john_doe,-15000.0,Rent payment,other,Landlord,2025-02-01 00:00:00
+148,john_doe,-3000.0,Grocery,food,BigBasket,2025-02-05 00:00:00
+149,john_doe,-2400.0,Zomato and cafe,food,Zomato,2025-02-10 00:00:00
+150,john_doe,-900.0,Uber,transport,Uber,2025-02-14 00:00:00
+151,john_doe,-1800.0,Bills,bills,Provider,2025-02-18 00:00:00
+152,john_doe,-2200.0,Shopping,shopping,Mall,2025-02-22 00:00:00
+153,john_doe,-1500.0,Restaurant,food,Restaurant,2025-02-28 00:00:00
+154,john_doe,-1200.0,Phone bill,bills,Operator,2025-02-02 00:00:00
+155,john_doe,-1800.0,Grocery,food,BigBasket,2025-02-04 00:00:00
+156,john_doe,-600.0,Metro recharge,transport,Metro,2025-02-07 00:00:00
+157,john_doe,-2500.0,Electricity bill,bills,Board,2025-02-12 00:00:00
+158,john_doe,-900.0,Uber ride,transport,Uber,2025-02-15 00:00:00
+159,john_doe,-3200.0,Zomato and restaurant,food,Zomato,2025-02-18 00:00:00
+160,john_doe,-1500.0,Internet bill,bills,Provider,2025-02-20 00:00:00
+161,john_doe,-1100.0,Coffee and snacks,food,Cafe,2025-02-25 00:00:00
+162,john_doe,-2000.0,Online shopping,shopping,Flipkart,2025-02-26 00:00:00
+163,john_doe,-800.0,Cab to airport,transport,Uber,2025-02-27 00:00:00
+164,john_doe,50000.0,Monthly salary,other,Company,2025-03-01 00:00:00
+165,john_doe,-500.0,rapido,transport,,2026-03-12 00:00:00
+166,Sankeerthana,50000.0,Monthly salary,other,Company,2024-10-01 00:00:00
+167,Sankeerthana,-15000.0,Rent payment,other,Landlord,2024-10-01 00:00:00
+168,Sankeerthana,-3200.0,Grocery shopping,food,BigBasket,2024-10-05 00:00:00
+169,Sankeerthana,-800.0,Uber to office,transport,Uber,2024-10-08 00:00:00
+170,Sankeerthana,50000.0,Monthly salary,other,Company,2024-11-01 00:00:00
+171,Sankeerthana,-15000.0,Rent payment,other,Landlord,2024-11-01 00:00:00
+172,Sankeerthana,-1800.0,Grocery at BigBasket,food,BigBasket,2024-11-03 00:00:00
+173,Sankeerthana,-2200.0,Zomato food delivery,food,Zomato,2024-11-06 00:00:00
+174,Sankeerthana,-600.0,Metro recharge,transport,Metro,2024-11-04 00:00:00
+175,Sankeerthana,-1200.0,Phone bill,bills,Operator,2024-11-05 00:00:00
+176,Sankeerthana,-2500.0,Restaurant dinner,food,Restaurant,2024-11-08 00:00:00
+177,Sankeerthana,-3500.0,Shopping at mall,shopping,Mall,2024-11-10 00:00:00
+178,Sankeerthana,-900.0,Uber ride,transport,Uber,2024-11-12 00:00:00
+179,Sankeerthana,-2000.0,Electricity bill,bills,Board,2024-11-15 00:00:00
+180,Sankeerthana,-1500.0,Internet bill,bills,Provider,2024-11-18 00:00:00
+181,Sankeerthana,50000.0,Monthly salary,other,Company,2024-12-01 00:00:00
+182,Sankeerthana,-15000.0,Rent payment,other,Landlord,2024-12-01 00:00:00
+183,Sankeerthana,-50000.0,Electronics purchase,shopping,Electronics Store,2024-12-10 00:00:00
+184,Sankeerthana,-2000.0,Grocery,food,BigBasket,2024-12-03 00:00:00
+185,Sankeerthana,-1800.0,Zomato delivery,food,Zomato,2024-12-07 00:00:00
+186,Sankeerthana,-1200.0,Netflix subscription,other,Netflix,2024-12-05 00:00:00
+187,Sankeerthana,-800.0,Uber,transport,Uber,2024-12-09 00:00:00
+188,Sankeerthana,-3000.0,Shopping,shopping,Amazon,2024-12-14 00:00:00
+189,Sankeerthana,-1100.0,Phone bill,bills,Operator,2024-12-16 00:00:00
+190,Sankeerthana,50000.0,Monthly salary,other,Company,2025-01-01 00:00:00
+191,Sankeerthana,-15000.0,Rent payment,other,Landlord,2025-01-01 00:00:00
+192,Sankeerthana,-2800.0,Grocery,food,BigBasket,2025-01-04 00:00:00
+193,Sankeerthana,-1500.0,Restaurant,food,Restaurant,2025-01-08 00:00:00
+194,Sankeerthana,-700.0,Metro and cab,transport,Metro,2025-01-06 00:00:00
+195,Sankeerthana,-2500.0,Online shopping,shopping,Flipkart,2025-01-12 00:00:00
+196,Sankeerthana,-2000.0,Electricity bill,bills,Board,2025-01-15 00:00:00
+197,Sankeerthana,50000.0,Monthly salary,other,Company,2025-02-01 00:00:00
+198,Sankeerthana,-15000.0,Rent payment,other,Landlord,2025-02-01 00:00:00
+199,Sankeerthana,-3000.0,Grocery,food,BigBasket,2025-02-05 00:00:00
+200,Sankeerthana,-2400.0,Zomato and cafe,food,Zomato,2025-02-10 00:00:00
+201,Sankeerthana,-900.0,Uber,transport,Uber,2025-02-14 00:00:00
+202,Sankeerthana,-1800.0,Bills,bills,Provider,2025-02-18 00:00:00
+203,Sankeerthana,-2200.0,Shopping,shopping,Mall,2025-02-22 00:00:00
+204,Sankeerthana,-1500.0,Restaurant,food,Restaurant,2025-02-28 00:00:00
+205,Sankeerthana,-1200.0,Phone bill,bills,Operator,2025-02-02 00:00:00
+206,Sankeerthana,-1800.0,Grocery,food,BigBasket,2025-02-04 00:00:00
+207,Sankeerthana,-600.0,Metro recharge,transport,Metro,2025-02-07 00:00:00
+208,Sankeerthana,-2500.0,Electricity bill,bills,Board,2025-02-12 00:00:00
+209,Sankeerthana,-900.0,Uber ride,transport,Uber,2025-02-15 00:00:00
+210,Sankeerthana,-3200.0,Zomato and restaurant,food,Zomato,2025-02-18 00:00:00
+211,Sankeerthana,-1500.0,Internet bill,bills,Provider,2025-02-20 00:00:00
+212,Sankeerthana,-1100.0,Coffee and snacks,food,Cafe,2025-02-25 00:00:00
+213,Sankeerthana,-2000.0,Online shopping,shopping,Flipkart,2025-02-26 00:00:00
+214,Sankeerthana,-800.0,Cab to airport,transport,Uber,2025-02-27 00:00:00
+215,Sankeerthana,50000.0,Monthly salary,other,Company,2025-03-01 00:00:00
